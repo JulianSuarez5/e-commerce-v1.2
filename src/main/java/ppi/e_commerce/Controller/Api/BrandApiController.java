@@ -1,7 +1,7 @@
 package ppi.e_commerce.Controller.Api;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,14 +15,10 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/brands")
 @CrossOrigin(origins = "*", maxAge = 3600)
+@RequiredArgsConstructor
 public class BrandApiController {
 
     private final BrandService brandService;
-
-    @Autowired
-    public BrandApiController(BrandService brandService) {
-        this.brandService = brandService;
-    }
 
     @GetMapping
     public ResponseEntity<List<BrandDto>> getAllBrands() {

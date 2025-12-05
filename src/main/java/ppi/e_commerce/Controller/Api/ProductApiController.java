@@ -1,5 +1,6 @@
 package ppi.e_commerce.Controller.Api;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,13 +16,10 @@ import ppi.e_commerce.Service.ProductService;
 @RestController
 @RequestMapping("/api/products")
 @CrossOrigin(origins = "*", maxAge = 3600)
+@RequiredArgsConstructor
 public class ProductApiController {
 
     private final ProductService productService;
-
-    public ProductApiController(ProductService productService) {
-        this.productService = productService;
-    }
 
     @GetMapping
     public ResponseEntity<Page<ProductDto>> getProducts(

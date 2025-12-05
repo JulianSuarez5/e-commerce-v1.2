@@ -1,8 +1,8 @@
 package ppi.e_commerce.Controller.Api;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -18,14 +18,10 @@ import ppi.e_commerce.Service.CartService;
 @RestController
 @RequestMapping("/api/cart")
 @CrossOrigin(origins = "*", maxAge = 3600)
+@RequiredArgsConstructor
 public class CartApiController {
 
     private final CartService cartService;
-
-    @Autowired
-    public CartApiController(CartService cartService) {
-        this.cartService = cartService;
-    }
 
     private String getUsername(Authentication authentication) {
         if (authentication == null) {

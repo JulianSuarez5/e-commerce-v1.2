@@ -14,6 +14,7 @@ import ppi.e_commerce.Model.*;
 import ppi.e_commerce.Repository.OrderRepository;
 import ppi.e_commerce.Repository.OrderTrackingRepository;
 import ppi.e_commerce.Repository.UserRepository;
+import ppi.e_commerce.Model.UserRole;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -101,6 +102,72 @@ public class OrderServiceImpl implements OrderService {
         dto.setTimestamp(tracking.getTimestamp());
         return dto;
     }
-    
-    // Deprecated and other methods are omitted for brevity in this refactoring
+
+    @Override
+    public Order createOrder(User user, List<CartItem> cartItems) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    @Override
+    public Optional<Order> getOrderById(Integer id) {
+        return orderRepository.findById(id);
+    }
+
+    @Override
+    public List<Order> getOrdersByUser(User user) {
+        return orderRepository.findByUserOrderByCreationDateDesc(user);
+    }
+
+    @Override
+    public List<Order> getAllOrders() {
+        return orderRepository.findAll();
+    }
+
+    @Override
+    public Order updateOrderStatus(Integer orderId, String status) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with ID: " + orderId));
+        order.setStatus(status);
+        return orderRepository.save(order);
+    }
+
+    @Override
+    public Order updateOrder(Order order) {
+        return orderRepository.save(order);
+    }
+
+    @Override
+    public void deleteOrder(Integer orderId) {
+        orderRepository.deleteById(orderId);
+    }
+
+    @Override
+    public List<Order> getOrdersByStatus(String status) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    @Override
+    public Long countOrdersByUser(User user) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    @Override
+    public Double getTotalSales() {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    @Override
+    public List<Order> getRecentOrders(int limit) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    @Override
+    public Long countOrders() {
+        return orderRepository.count();
+    }
+
+    @Override
+    public List<Order> findAll() {
+        return orderRepository.findAll();
+    }
 }

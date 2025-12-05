@@ -3,7 +3,6 @@ package ppi.e_commerce.Service;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
-import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
@@ -82,7 +81,7 @@ public class ExportService {
     }
 
     private void addHeaderCell(Table table, String header) {
-        table.addHeaderCell(new Cell().add(new Paragraph(header)).setBold());
+        table.addHeaderCell(new com.itextpdf.layout.element.Cell().add(new Paragraph(header)).setBold());
     }
 
     /**
@@ -197,7 +196,7 @@ public class ExportService {
                 row.createCell(1).setCellValue(product.getName());
                 row.createCell(2).setCellValue(product.getDescription() != null ? product.getDescription() : "");
                 row.createCell(3).setCellValue(product.getPrice());
-                row.createCell(4).setCellValue(product.getCantidad());
+                row.createCell(4).setCellValue(product.getStock());
                 row.createCell(5).setCellValue(product.getCategory() != null ? product.getCategory().getName() : "");
                 row.createCell(6).setCellValue(product.getBrand() != null ? product.getBrand().getName() : "");
                 row.createCell(7).setCellValue(product.isActive() ? "Sí" : "No");

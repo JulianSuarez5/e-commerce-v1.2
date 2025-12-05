@@ -1,8 +1,8 @@
 package ppi.e_commerce.Controller.Api;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -18,14 +18,10 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/products/{productId}/reviews")
 @CrossOrigin(origins = "*", maxAge = 3600)
+@RequiredArgsConstructor
 public class ReviewApiController {
 
     private final ReviewService reviewService;
-
-    @Autowired
-    public ReviewApiController(ReviewService reviewService) {
-        this.reviewService = reviewService;
-    }
 
     @PostMapping
     public ResponseEntity<ReviewDto> createReview(

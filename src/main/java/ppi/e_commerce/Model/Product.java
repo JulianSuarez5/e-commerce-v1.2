@@ -23,8 +23,11 @@ public class Product {
     @DecimalMin(value = "0.01", message = "El precio debe ser mayor a 0")
     private Double price;
 
-    @Min(value = 0, message = "La cantidad no puede ser negativa")
-    private int cantidad;
+    @Min(value = 0, message = "El stock no puede ser negativo")
+    private Integer stock;
+
+    @Column(unique = true)
+    private String sku;
 
     @Column(length = 500)
     private String imageUrl;
@@ -61,12 +64,13 @@ public class Product {
 
     public Product() {}
 
-    public Product(String name, String description, Double price, int cantidad, String imageUrl, 
+    public Product(String name, String description, Double price, Integer stock, String sku, String imageUrl, 
                    Category category, Brand brand) {
         this.name = name;
         this.description = description;
         this.price = price;
-        this.cantidad = cantidad;
+        this.stock = stock;
+        this.sku = sku;
         this.imageUrl = imageUrl;
         this.category = category;
         this.brand = brand;
@@ -117,12 +121,20 @@ public class Product {
         this.price = price;
     }
 
-    public int getCantidad() {
-        return cantidad;
+    public Integer getStock() {
+        return stock;
     }
 
-    public void setCantidad(int cantidad) {
-        this.cantidad = cantidad;
+    public void setStock(Integer stock) {
+        this.stock = stock;
+    }
+
+    public String getSku() {
+        return sku;
+    }
+
+    public void setSku(String sku) {
+        this.sku = sku;
     }
 
     public String getImageUrl() {
@@ -219,7 +231,7 @@ public class Product {
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", price=" + price +
-                ", cantidad=" + cantidad +
+                ", stock=" + stock +
                 ", active=" + active +
                 '}';
     }

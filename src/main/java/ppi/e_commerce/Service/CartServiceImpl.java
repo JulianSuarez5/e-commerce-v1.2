@@ -57,7 +57,7 @@ public class CartServiceImpl implements CartService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with ID: " + productId));
 
-        if (!product.isActive() || product.getCantidad() < quantity) {
+        if (!product.isActive() || product.getStock() < quantity) {
             log.warn("Product ID '{}' is not available or has insufficient stock for user '{}'.", productId, username);
             throw new BusinessException("Product not available or insufficient stock");
         }
@@ -95,7 +95,7 @@ public class CartServiceImpl implements CartService {
             cartItemRepository.delete(item);
         } else {
             Product product = item.getProduct();
-            if (!product.isActive() || product.getCantidad() < quantity) {
+            if (!product.isActive() || product.getStock() < quantity) {
                 log.warn("Insufficient stock for product ID '{}' when updating cart for user '{}'.", product.getId(), username);
                 throw new BusinessException("Insufficient stock.");
             }
@@ -215,9 +215,9 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public BigDecimal getCartTotal(User user) {
+    public double getCartTotal(User user) {
         Cart cart = getOrCreateCart(user);
-        return BigDecimal.valueOf(cart.getCartItems().stream().mapToDouble(item -> item.getPrice() * item.getQuantity()).sum());
+        return cart.getCartItems().stream().mapToDouble(item -> item.getPrice() * item.getQuantity()).sum();
     }
 
     @Override

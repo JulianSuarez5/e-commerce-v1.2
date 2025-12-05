@@ -7,10 +7,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ppi.e_commerce.Dto.ProductDto;
+import ppi.e_commerce.Dto.ProductVariantDto;
 import ppi.e_commerce.Exception.ResourceNotFoundException;
 import ppi.e_commerce.Mapper.ProductMapper;
-import ppi.e_commerce.Model.Product;
-import ppi.e_commerce.Repository.ProductRepository;
+import ppi.e_commerce.Mapper.ProductVariantMapper;
+import ppi.e_commerce.Model.*;
+import ppi.e_commerce.Repository.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -19,7 +24,12 @@ import ppi.e_commerce.Repository.ProductRepository;
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
+    private final ProductImageRepository productImageRepository;
+    private final ProductModel3DRepository productModel3DRepository;
+    private final ProductVariantRepository productVariantRepository;
+    private final UserRepository userRepository;
     private final ProductMapper productMapper;
+    private final ProductVariantMapper productVariantMapper;
 
     @Override
     @Transactional(readOnly = true)
@@ -76,5 +86,83 @@ public class ProductServiceImpl implements ProductService {
         }
         productRepository.deleteById(productId);
         log.info("Successfully deleted product with ID: {}", productId);
+    }
+
+    @Override
+    public boolean isOwner(Integer productId, String username) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with ID: " + productId));
+        return product.getSeller().getUser().getUsername().equals(username);
+    }
+
+    @Override
+    public void saveProductImage(Integer productId, String fileName) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with ID: " + productId));
+        ProductImage image = new ProductImage(product, fileName);
+        productImageRepository.save(image);
+    }
+
+    @Override
+    public void saveProductModel3D(Integer productId, String fileName) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with ID: " + productId));
+        ProductModel3D model3D = new ProductModel3D(product, fileName);
+        productModel3DRepository.save(model3D);
+    }
+
+    @Override
+    public ProductVariantDto createProductVariant(Integer productId, ProductVariantDto variantDto) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with ID: " + productId));
+        ProductVariant variant = new ProductVariant();
+        productVariantMapper.updateEntityFromDto(variantDto, variant);
+        variant.setProduct(product);
+        ProductVariant savedVariant = productVariantRepository.save(variant);
+        return productVariantMapper.toDto(savedVariant);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProductVariantDto> getProductVariants(Integer productId, boolean activeOnly) {
+        List<ProductVariant> variants = activeOnly
+                ? productVariantRepository.findByProductIdAndActiveTrue(productId)
+                : productVariantRepository.findByProductId(productId);
+        return variants.stream()
+                .map(productVariantMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ProductVariantDto getProductVariant(Integer productId, Integer variantId) {
+        ProductVariant variant = productVariantRepository.findById(variantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product variant not found with ID: " + variantId));
+        if (!variant.getProduct().getId().equals(productId)) {
+            throw new IllegalArgumentException("Product variant does not belong to the specified product");
+        }
+        return productVariantMapper.toDto(variant);
+    }
+
+    @Override
+    public ProductVariantDto updateProductVariant(Integer productId, Integer variantId, ProductVariantDto variantDto) {
+        ProductVariant variant = productVariantRepository.findById(variantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product variant not found with ID: " + variantId));
+        if (!variant.getProduct().getId().equals(productId)) {
+            throw new IllegalArgumentException("Product variant does not belong to the specified product
+        }
+        productVariantMapper.updateEntityFromDto(variantDto, variant);
+        ProductVariant updatedVariant = productVariantRepository.save(variant);
+        return productVariantMapper.toDto(updatedVariant);
+    }
+
+    @Override
+    public void deleteProductVariant(Integer productId, Integer variantId) {
+        ProductVariant variant = productVariantRepository.findById(variantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product variant not found with ID: " + variantId));
+        if (!variant.getProduct().getId().equals(productId)) {
+            throw new IllegalArgumentException("Product variant does not belong to the specified product");
+        }
+        productVariantRepository.delete(variant);
     }
 }
