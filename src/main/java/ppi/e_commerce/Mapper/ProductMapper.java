@@ -8,20 +8,16 @@ import ppi.e_commerce.Model.Product;
 
 @Mapper(componentModel = "spring")
 public interface ProductMapper {
-    
+
     ProductMapper INSTANCE = Mappers.getMapper(ProductMapper.class);
 
-    @Mapping(target = "categoryId", source = "category.id")
-    @Mapping(target = "categoryName", source = "category.name")
-    @Mapping(target = "brandId", source = "brand.id")
-    @Mapping(target = "brandName", source = "brand.name")
+    @Mapping(source = "category.name", target = "categoryName")
+    @Mapping(source = "brand.name", target = "brandName")
+    @Mapping(source = "seller.id", target = "sellerId")
     ProductDto toDto(Product product);
 
-    @Mapping(target = "category", ignore = true)
-    @Mapping(target = "brand", ignore = true)
-    @Mapping(target = "cartItems", ignore = true)
-    @Mapping(target = "orderDetails", ignore = true)
-    @Mapping(target = "user", ignore = true)
-    Product toEntity(ProductDto dto);
+    @Mapping(source = "categoryName", target = "category.name")
+    @Mapping(source = "brandName", target = "brand.name")
+    @Mapping(source = "sellerId", target = "seller.id")
+    Product toEntity(ProductDto productDto);
 }
-

@@ -1,5 +1,6 @@
 package ppi.e_commerce.Config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -16,6 +17,7 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.header.writers.ContentSecurityPolicyHeaderWriter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -24,6 +26,8 @@ import ppi.e_commerce.Service.AuthServiceImpl;
 
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Arrays;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
 @Configuration
@@ -39,6 +43,9 @@ public class SecurityConfig {
 
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
+    
+    @Value("${app.cors.allowed-origins}")
+    private String[] allowedOrigins;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -48,6 +55,16 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+            .headers(headers -> headers
+                .contentSecurityPolicy(csp -> csp
+                    .policyDirectives("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; form-action 'self'; object-src 'none';")
+                )
+                .httpStrictTransportSecurity(hsts -> hsts
+                    .includeSubDomains(true)
+                    .maxAgeInSeconds(31536000)
+                )
+                .frameOptions(frameOptions -> frameOptions.deny())
+            )
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf
                 .ignoringRequestMatchers("/api/**")
@@ -56,32 +73,17 @@ public class SecurityConfig {
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             .authorizeHttpRequests(authz -> authz
-                // Assets estáticos
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/vendor/**", "/webjars/**", "/uploads/**").permitAll()
-                
-                // APIs públicas
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/products/**").permitAll()
                 .requestMatchers("/api/sellers/**").permitAll()
                 .requestMatchers("/api/categories/**").permitAll()
                 .requestMatchers("/api/brands/**").permitAll()
-                
-                // Health check
                 .requestMatchers("/actuator/health", "/error").permitAll()
-                
-                // APIs protegidas - Cart y Checkout
                 .requestMatchers("/api/cart/**", "/api/checkout/**").authenticated()
-                
-                // APIs protegidas - Seller actions (upload, variants)
                 .requestMatchers("/api/products/*/images", "/api/products/*/models3d", "/api/products/*/variants").hasAnyRole("SELLER", "ADMIN")
-                
-                // APIs protegidas - Admin
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                
-                // Todas las demás APIs requieren autenticación
                 .requestMatchers("/api/**").authenticated()
-                
-                // Permitir todo lo demás (frontend Next.js maneja sus propias rutas)
                 .anyRequest().permitAll()
             )
             .exceptionHandling(exceptions -> exceptions
@@ -104,11 +106,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("*")); // En producción, especificar dominios
+        configuration.setAllowedOrigins(List.of(allowedOrigins));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin"));
         configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));
-        configuration.setAllowCredentials(false);
+        configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -132,7 +134,6 @@ public class SecurityConfig {
     @Bean
     public UserDetailsService userDetailsService(UserRepository userRepository, AuthServiceImpl authService) {
         return username -> {
-            // Buscar por username O email
             java.util.Optional<ppi.e_commerce.Model.User> maybeUser = userRepository.findByUsername(username);
             if (maybeUser.isEmpty()) {
                 maybeUser = userRepository.findByEmail(username);
@@ -141,25 +142,22 @@ public class SecurityConfig {
             ppi.e_commerce.Model.User appUser = maybeUser
                     .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + username));
 
-            // Verificar que el usuario esté activo
             if (!appUser.isActive()) {
                 throw new org.springframework.security.authentication.DisabledException("Usuario desactivado");
             }
 
-            // Normalizar el rol
             String rawRole = appUser.getRole();
             if (rawRole == null || rawRole.isBlank()) {
                 rawRole = "USER";
             }
             
-            rawRole = rawRole.trim().toUpperCase();
+            rawRole = raw.trim().toUpperCase();
             if (rawRole.startsWith("ROLE_")) {
                 rawRole = rawRole.substring(5);
             }
             
             String finalRole = rawRole;
 
-            // Determinar qué contraseña usar
             String passwordToUse;
             if (authService.estaUsandoContrasenaTemporal(appUser)) {
                 passwordToUse = appUser.getTempPasswordHash();

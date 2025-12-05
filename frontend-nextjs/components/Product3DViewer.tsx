@@ -55,6 +55,8 @@ export default function Product3DViewer({ product }: Product3DViewerProps) {
     );
   }
 
+  const modelUrl = `${process.env.NEXT_PUBLIC_API_URL}${product.model3dUrl}`;
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -94,7 +96,7 @@ export default function Product3DViewer({ product }: Product3DViewerProps) {
           <pointLight position={[0, 10, 0]} intensity={0.5} />
 
           {/* Modelo 3D */}
-          <Model url={`http://localhost:8081${product.model3dUrl}`} />
+          <Model url={modelUrl} />
 
           {/* Controles Suaves */}
           <OrbitControls

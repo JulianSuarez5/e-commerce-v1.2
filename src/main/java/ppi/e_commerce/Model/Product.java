@@ -37,26 +37,26 @@ public class Product {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seller_id")
     private Seller seller;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private Category category;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "brand_id")
     private Brand brand;
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<CartItem> cartItems;
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<OrderDetail> orderDetails;
 
     public Product() {}
@@ -83,130 +83,134 @@ public class Product {
         updatedAt = LocalDateTime.now();
     }
 
-    // Getters
+    // Getters and Setters...
+
     public Integer getId() {
         return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
     }
 
     public String getName() {
         return name;
     }
 
-    public String getDescription() {
-        return description;
-    }
-
-    public Double getPrice() {
-        return price;
-    }
-
-    public String getImageUrl() {
-        return imageUrl;
-    }
-
-    public String getModel3dUrl() {
-        return model3dUrl;
-    }
-
-    public int getCantidad() {
-        return cantidad;
-    }
-
-    public boolean isActive() { 
-        return active; 
-    }
-    
-    public boolean getActive() { 
-        return active; 
-    }
-
-    public LocalDateTime getCreatedAt() { 
-        return createdAt; 
-    }
-    
-    public LocalDateTime getUpdatedAt() { 
-        return updatedAt; 
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public Category getCategory() { 
-        return category; 
-    }
-
-    public Brand getBrand() { 
-        return brand; 
-    }
-
-    public List<CartItem> getCartItems() { 
-        return cartItems; 
-    }
-
-    public List<OrderDetail> getOrderDetails() { 
-        return orderDetails; 
-    }
-
-    // Setters
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
     }
 
     public void setDescription(String description) {
         this.description = description;
     }
 
+    public Double getPrice() {
+        return price;
+    }
+
     public void setPrice(Double price) {
         this.price = price;
+    }
+
+    public int getCantidad() {
+        return cantidad;
     }
 
     public void setCantidad(int cantidad) {
         this.cantidad = cantidad;
     }
 
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
+    }
+
+    public String getModel3dUrl() {
+        return model3dUrl;
     }
 
     public void setModel3dUrl(String model3dUrl) {
         this.model3dUrl = model3dUrl;
     }
 
-    public void setActive(boolean active) { 
-        this.active = active; 
+    public boolean isActive() {
+        return active;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) { 
-        this.createdAt = createdAt; 
+    public void setActive(boolean active) {
+        this.active = active;
     }
-    
-    public void setUpdatedAt(LocalDateTime updatedAt) { 
-        this.updatedAt = updatedAt; 
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public User getUser() {
+        return user;
     }
 
     public void setUser(User user) {
         this.user = user;
     }
 
-    public void setCategory(Category category) { 
-        this.category = category; 
+    public Seller getSeller() {
+        return seller;
     }
 
-    public void setBrand(Brand brand) { 
-        this.brand = brand; 
+    public void setSeller(Seller seller) {
+        this.seller = seller;
     }
 
-    public void setCartItems(List<CartItem> cartItems) { 
-        this.cartItems = cartItems; 
+    public Category getCategory() {
+        return category;
     }
 
-    public void setOrderDetails(List<OrderDetail> orderDetails) { 
-        this.orderDetails = orderDetails; 
+    public void setCategory(Category category) {
+        this.category = category;
+    }
+
+    public Brand getBrand() {
+        return brand;
+    }
+
+    public void setBrand(Brand brand) {
+        this.brand = brand;
+    }
+
+    public List<CartItem> getCartItems() {
+        return cartItems;
+    }
+
+    public void setCartItems(List<CartItem> cartItems) {
+        this.cartItems = cartItems;
+    }
+
+    public List<OrderDetail> getOrderDetails() {
+        return orderDetails;
+    }
+
+    public void setOrderDetails(List<OrderDetail> orderDetails) {
+        this.orderDetails = orderDetails;
     }
 
     @Override

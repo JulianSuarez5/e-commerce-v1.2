@@ -8,7 +8,4 @@ public interface FileStorageService {
     String storeModel3D(MultipartFile file, String folder) throws IOException;
     String generateThumbnail(String imageUrl) throws IOException;
     void deleteFile(String fileUrl);
-    boolean validateImageFile(MultipartFile file);
-    boolean validateModel3DFile(MultipartFile file);
 }
-

@@ -3,6 +3,7 @@ package ppi.e_commerce.Controller.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -11,9 +12,11 @@ import ppi.e_commerce.Exception.ResourceNotFoundException;
 import ppi.e_commerce.Model.Product;
 import ppi.e_commerce.Model.ProductImage;
 import ppi.e_commerce.Model.ProductModel3D;
+import ppi.e_commerce.Model.User;
 import ppi.e_commerce.Repository.ProductRepository;
 import ppi.e_commerce.Repository.ProductImageRepository;
 import ppi.e_commerce.Repository.ProductModel3DRepository;
+import ppi.e_commerce.Repository.UserRepository;
 import ppi.e_commerce.Service.FileStorageService;
 
 import java.io.IOException;
@@ -23,7 +26,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/products/{productId}")
-@CrossOrigin(origins = "*", maxAge = 3600)
 public class ProductMediaApiController {
 
     @Autowired
@@ -38,8 +40,27 @@ public class ProductMediaApiController {
     @Autowired
     private FileStorageService fileStorageService;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    private void validateOwnership(Product product, Authentication authentication) {
+        String currentUsername = authentication.getName();
+        User currentUser = userRepository.findByUsername(currentUsername)
+            .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+
+        // Permitir si es Admin
+        if (currentUser.getRole().equals("ADMIN")) {
+            return;
+        }
+
+        // Verificar si el producto tiene un vendedor y si el usuario actual es ese vendedor
+        if (product.getSeller() == null || product.getSeller().getUser() == null || !product.getSeller().getUser().getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException("No tienes permiso para modificar este producto.");
+        }
+    }
+
     @PostMapping("/images")
-    @PreAuthorize("hasRole('SELLER') or hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
     public ResponseEntity<?> uploadImage(
             @PathVariable Integer productId,
             @RequestParam("file") MultipartFile file,
@@ -50,13 +71,11 @@ public class ProductMediaApiController {
             Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado"));
 
-            // Validar permisos: solo el seller del producto o admin
-            // TODO: Implementar validación de seller
+            validateOwnership(product, authentication);
 
             String imageUrl = fileStorageService.storeImage(file, "products");
             String thumbnailUrl = fileStorageService.generateThumbnail(imageUrl);
 
-            // Si es la primera imagen o se marca como primary, desmarcar otras
             if (isPrimary || productImageRepository.findByProductIdOrderByDisplayOrderAsc(productId).isEmpty()) {
                 productImageRepository.findByProductIdAndIsPrimaryTrue(productId)
                     .ifPresent(img -> {
@@ -86,6 +105,8 @@ public class ProductMediaApiController {
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body("Error al guardar imagen: " + e.getMessage());
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body("Error: " + e.getMessage());
@@ -103,11 +124,15 @@ public class ProductMediaApiController {
     }
 
     @DeleteMapping("/images/{imageId}")
-    @PreAuthorize("hasRole('SELLER') or hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
     public ResponseEntity<?> deleteImage(
             @PathVariable Integer productId,
-            @PathVariable Integer imageId) {
+            @PathVariable Integer imageId, Authentication authentication) {
         try {
+            Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado"));
+            validateOwnership(product, authentication);
+
             ProductImage image = productImageRepository.findById(imageId)
                 .orElseThrow(() -> new ResourceNotFoundException("Imagen no encontrada"));
 
@@ -123,6 +148,8 @@ public class ProductMediaApiController {
 
             productImageRepository.delete(image);
             return ResponseEntity.ok().build();
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body("Error al eliminar imagen: " + e.getMessage());
@@ -130,7 +157,7 @@ public class ProductMediaApiController {
     }
 
     @PostMapping("/models3d")
-    @PreAuthorize("hasRole('SELLER') or hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
     public ResponseEntity<?> uploadModel3D(
             @PathVariable Integer productId,
             @RequestParam("file") MultipartFile file,
@@ -140,6 +167,8 @@ public class ProductMediaApiController {
             Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado"));
 
+            validateOwnership(product, authentication);
+
             String originalFilename = file.getOriginalFilename();
             String format = originalFilename != null && originalFilename.endsWith(".gltf") 
                 ? "GLTF" 
@@ -147,7 +176,6 @@ public class ProductMediaApiController {
 
             String modelUrl = fileStorageService.storeModel3D(file, "products");
 
-            // Si se marca como primary, desmarcar otros
             if (isPrimary) {
                 productModel3DRepository.findByProductIdAndIsPrimaryTrue(productId)
                     .ifPresent(model -> {
@@ -162,11 +190,10 @@ public class ProductMediaApiController {
             model3D.setFormat(format);
             model3D.setFileSize(file.getSize());
             model3D.setIsPrimary(isPrimary);
-            model3D.setOptimized(false); // TODO: Implementar optimización DRACO
+            model3D.setOptimized(false);
 
             ProductModel3D saved = productModel3DRepository.save(model3D);
 
-            // Actualizar el campo model3dUrl del producto si es primary
             if (isPrimary) {
                 product.setModel3dUrl(modelUrl);
                 productRepository.save(product);
@@ -184,6 +211,8 @@ public class ProductMediaApiController {
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body("Error al guardar modelo 3D: " + e.getMessage());
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body("Error: " + e.getMessage());
@@ -201,11 +230,15 @@ public class ProductMediaApiController {
     }
 
     @DeleteMapping("/models3d/{modelId}")
-    @PreAuthorize("hasRole('SELLER') or hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
     public ResponseEntity<?> deleteModel3D(
             @PathVariable Integer productId,
-            @PathVariable Integer modelId) {
+            @PathVariable Integer modelId, Authentication authentication) {
         try {
+             Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado"));
+            validateOwnership(product, authentication);
+
             ProductModel3D model = productModel3DRepository.findById(modelId)
                 .orElseThrow(() -> new ResourceNotFoundException("Modelo 3D no encontrado"));
 
@@ -218,10 +251,11 @@ public class ProductMediaApiController {
             productModel3DRepository.delete(model);
 
             return ResponseEntity.ok().build();
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body("Error al eliminar modelo 3D: " + e.getMessage());
         }
     }
 }
-

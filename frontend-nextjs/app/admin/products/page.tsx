@@ -1,125 +1,88 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { ProductDto } from '@/types/product';
-import { Card } from '@/ui/card';
-import { Table, THead, TBody, TR, TH, TD } from '@/ui/table';
-import { Button } from '@/ui/button';
-import { Modal } from '@/ui/modal';
-import { Input } from '@/ui/input';
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { PlusCircle, Search } from 'lucide-react';
 
-export default function AdminProductsPage() {
-  const [products, setProducts] = useState<ProductDto[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [modalOpen, setModalOpen] = useState(false);
+// Mock data for products
+const mockProducts = [
+  { id: 1, name: 'iPhone 14 Pro', category: 'Electronics', price: 999, stock: 150, sales: 450 },
+  { id: 2, name: 'Samsung Galaxy S23', category: 'Electronics', price: 899, stock: 200, sales: 380 },
+  { id: 3, name: 'MacBook Pro 16"', category: 'Computers', price: 2499, stock: 80, sales: 320 },
+  { id: 4, name: 'Sony WH-1000XM5', category: 'Audio', price: 399, stock: 300, sales: 280 },
+  { id: 5, name: 'iPad Air', category: 'Tablets', price: 599, stock: 120, sales: 210 },
+];
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
+export default function ProductsPage() {
+  const [products, setProducts] = useState(mockProducts);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const fetchProducts = async () => {
-    try {
-      const res = await fetch('/api/products');
-      if (res.ok) {
-        const data = await res.json();
-        setProducts(data);
-      }
-    } catch {
-      // silencioso: la tabla explica que es una vista conectada a la API pública
-    } finally {
-      setLoading(false);
-    }
-  };
+  const filteredProducts = products.filter(product =>
+    product.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
-    <div className="space-y-6">
-      <header className="flex items-center justify-between gap-3">
+    <div className="p-8 bg-gray-50 min-h-screen">
+      <header className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-display mb-1">Productos</h1>
-          <p className="text-subtitle">
-            Gestión básica de productos usando la API pública existente.
-          </p>
+          <h1 className="text-3xl font-bold text-gray-800">Products</h1>
+          <p className="text-gray-500">Manage your product catalog</p>
         </div>
-        <Button variant="primary" onClick={() => setModalOpen(true)}>
-          Nuevo producto
-        </Button>
+        <motion.button 
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="flex items-center bg-blue-500 text-white px-4 py-2 rounded-lg shadow-md"
+        >
+          <PlusCircle className="mr-2" size={20} />
+          Add Product
+        </motion.button>
       </header>
 
-      <Card className="p-5">
-        <Table>
-          <THead>
-            <TR>
-              <TH>ID</TH>
-              <TH>Nombre</TH>
-              <TH>Categoría</TH>
-              <TH>Marca</TH>
-              <TH className="text-right">Precio</TH>
-            </TR>
-          </THead>
-          <TBody>
-            {loading ? (
-              <TR>
-                <TD colSpan={5} className="text-center text-xs text-[#86868B] py-6">
-                  Cargando productos…
-                </TD>
-              </TR>
-            ) : products.length === 0 ? (
-              <TR>
-                <TD colSpan={5} className="text-center text-xs text-[#86868B] py-6">
-                  No hay productos disponibles. Usa el backend para crear
-                  productos y se verán aquí.
-                </TD>
-              </TR>
-            ) : (
-              products.map((p) => (
-                <TR key={p.id}>
-                  <TD>{p.id}</TD>
-                  <TD>{p.name}</TD>
-                  <TD>{p.categoryName ?? '-'}</TD>
-                  <TD>{p.brandName ?? '-'}</TD>
-                  <TD className="text-right">${p.price.toFixed(2)}</TD>
-                </TR>
-              ))
-            )}
-          </TBody>
-        </Table>
-      </Card>
-
-      <Modal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        title="Nuevo producto (placeholder)"
-        footer={
-          <>
-            <Button variant="secondary" onClick={() => setModalOpen(false)}>
-              Cancelar
-            </Button>
-            <Button disabled>Guardar (conectar a API)</Button>
-          </>
-        }
-      >
-        <p className="text-xs text-[#86868B] mb-4">
-          Esta vista está preparada para conectarse a un endpoint de creación de
-          productos en el backend. Por ahora funciona sólo como maqueta de
-          diseño.
-        </p>
-        <div className="space-y-3">
-          <div>
-            <label className="block text-xs font-medium text-[#86868B] mb-1">
-              Nombre
-            </label>
-            <Input placeholder="Nombre del producto" />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-[#86868B] mb-1">
-              Precio
-            </label>
-            <Input type="number" placeholder="0.00" />
-          </div>
+      <div className="bg-white p-6 rounded-lg shadow-md">
+        <div className="flex items-center mb-4">
+          <Search className="text-gray-400 mr-2" />
+          <input 
+            type="text"
+            placeholder="Search for products..."
+            className="w-full p-2 border border-gray-200 rounded-lg"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
-      </Modal>
+
+        <table className="w-full text-left">
+          <thead>
+            <tr className="border-b bg-gray-50">
+              <th className="p-3">Product</th>
+              <th className="p-3">Category</th>
+              <th className="p-3">Price</th>
+              <th className="p-3">Stock</th>
+              <th className="p-3">Sales</th>
+              <th className="p-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredProducts.map(product => (
+              <motion.tr 
+                key={product.id} 
+                className="border-b hover:bg-gray-50"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+              >
+                <td className="p-3 font-medium">{product.name}</td>
+                <td className="p-3 text-gray-600">{product.category}</td>
+                <td className="p-3 text-gray-600">${product.price}</td>
+                <td className="p-3 text-gray-600">{product.stock}</td>
+                <td className="p-3 text-gray-600">{product.sales}</td>
+                <td className="p-3">
+                  <button className="text-blue-500 hover:underline mr-4">Edit</button>
+                  <button className="text-red-500 hover:underline">Delete</button>
+                </td>
+              </motion.tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
-
-

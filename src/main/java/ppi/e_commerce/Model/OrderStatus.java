@@ -1,14 +1,10 @@
 package ppi.e_commerce.Model;
 
 public enum OrderStatus {
-    CREATED,
-    PAID,
+    PENDING,
     PROCESSING,
     SHIPPED,
-    IN_TRANSIT,
     DELIVERED,
-    CANCELLED,
-    RETURNED,
-    REFUNDED
+    COMPLETED,
+    CANCELLED
 }
-
