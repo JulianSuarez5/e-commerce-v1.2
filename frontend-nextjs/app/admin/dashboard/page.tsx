@@ -18,8 +18,15 @@ const initialMetrics = {
   ],
 };
 
+interface MetricCardProps {
+  title: string;
+  value: number | string;
+  unit: string;
+  icon: React.ReactNode;
+}
+
 // Card component for displaying a single metric
-function MetricCard({ title, value, unit, icon }) {
+function MetricCard({ title, value, unit, icon }: MetricCardProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}

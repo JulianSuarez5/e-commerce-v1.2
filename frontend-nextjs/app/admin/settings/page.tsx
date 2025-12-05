@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, ChangeEvent } from 'react';
 import { motion } from 'framer-motion';
 import { Save } from 'lucide-react';
 
@@ -12,7 +12,7 @@ export default function SettingsPage() {
     taxRate: 0.08,
   });
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setSettings(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   };
@@ -62,7 +62,7 @@ export default function SettingsPage() {
                 id="taxRate"
                 name="taxRate"
                 value={settings.taxRate * 100}
-                onChange={(e) => setSettings(prev => ({...prev, taxRate: e.target.value / 100}))}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setSettings(prev => ({...prev, taxRate: parseFloat(e.target.value) / 100}))}
                 className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm"
               />
             </div>

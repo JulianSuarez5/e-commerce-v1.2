@@ -1,7 +1,7 @@
 package ppi.e_commerce.Interceptor;
 
-import io.github.bucket4j.Bucket;
-import io.github.bucket4j.ConsumptionProbe;
+import com.github.vladimirbukhtoyarov.bucket4j.Bucket;
+import com.github.vladimirbukhtoyarov.bucket4j.ConsumptionProbe;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import AppleHeader from '@/components/AppleHeader';
-import ProductCard from '@/components/ProductCard';
+import { ProductCard } from '@/components/ProductCard';
 import { ProductDto, Category, Brand } from '@/types/product';
 import { Filter, X } from 'lucide-react';
 import { Container } from '@/ui/container';

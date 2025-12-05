@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowLeft, MapPin, CreditCard } from 'lucide-react';
 import AppleHeader from '@/components/AppleHeader';

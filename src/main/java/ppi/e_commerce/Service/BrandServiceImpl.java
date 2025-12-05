@@ -1,75 +1,42 @@
 package ppi.e_commerce.Service;
 
-import ppi.e_commerce.Model.Brand;
-import ppi.e_commerce.Repository.BrandRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ppi.e_commerce.Dto.BrandDto;
+import ppi.e_commerce.Exception.ResourceNotFoundException;
+import ppi.e_commerce.Mapper.BrandMapper;
+import ppi.e_commerce.Repository.BrandRepository;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
 public class BrandServiceImpl implements BrandService {
 
+    private final BrandRepository brandRepository;
+    private final BrandMapper brandMapper;
+
     @Autowired
-    private BrandRepository brandRepository;
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<Brand> findAll() {
-        return brandRepository.findAll();
+    public BrandServiceImpl(BrandRepository brandRepository, BrandMapper brandMapper) {
+        this.brandRepository = brandRepository;
+        this.brandMapper = brandMapper;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Brand> findActiveBrands() {
-        return brandRepository.findActiveBrandsOrderedByName();
+    public List<BrandDto> findActiveBrands() {
+        return brandRepository.findActiveBrandsOrderedByName().stream()
+                .map(brandMapper::toDto)
+                .collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<Brand> findById(Integer id) {
-        return brandRepository.findById(id);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Optional<Brand> findByName(String name) {
-        return brandRepository.findByName(name);
-    }
-
-    @Override
-    public Brand saveBrand(Brand brand) {
-        return brandRepository.save(brand);
-    }
-
-    @Override
-    public Brand updateBrand(Brand brand) {
-        return brandRepository.save(brand);
-    }
-
-    @Override
-    public void deleteBrand(Integer id) {
-        brandRepository.deleteById(id);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public boolean existsByName(String name) {
-        return brandRepository.findByName(name).isPresent();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Long countProductsByBrand(Brand brand) {
-        return brandRepository.countProductsByBrand(brand);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public long countBrands() {
-        return brandRepository.count();
+    public BrandDto findById(Integer id) {
+        return brandRepository.findById(id)
+                .map(brandMapper::toDto)
+                .orElseThrow(() -> new ResourceNotFoundException("Brand not found with id: " + id));
     }
 }

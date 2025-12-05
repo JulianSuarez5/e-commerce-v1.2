@@ -3,10 +3,10 @@ package ppi.e_commerce.Service;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import io.github.bucket4j.Bandwidth;
-import io.github.bucket4j.Bucket;
-import io.github.bucket4j.Bucket4j;
-import io.github.bucket4j.Refill;
+import com.github.vladimirbukhtoyarov.bucket4j.Bandwidth;
+import com.github.vladimirbukhtoyarov.bucket4j.Bucket;
+import com.github.vladimirbukhtoyarov.bucket4j.Bucket4j;
+import com.github.vladimirbukhtoyarov.bucket4j.Refill;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 

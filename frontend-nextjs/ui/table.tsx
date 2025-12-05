@@ -1,4 +1,4 @@
-import type { HTMLAttributes, PropsWithChildren, ThHTMLAttributes } from 'react';
+import type { HTMLAttributes, PropsWithChildren, ThHTMLAttributes, TdHTMLAttributes } from 'react';
 import { cn } from '@/lib/cn';
 
 export function Table({
@@ -65,7 +65,7 @@ export function TH({
 export function TD({
   className,
   ...props
-}: PropsWithChildren<HTMLAttributes<HTMLTableCellElement>>) {
+}: PropsWithChildren<TdHTMLAttributes<HTMLTableCellElement>>) {
   return (
     <td
       className={cn('px-4 py-3 align-middle text-sm text-[#1D1D1F]', className)}
@@ -73,5 +73,3 @@ export function TD({
     />
   );
 }
-
-

@@ -7,7 +7,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.beans.factory.annotation.Value;
 import ppi.e_commerce.Model.User;
 import ppi.e_commerce.Repository.UserRepository;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Configuration
 public class DataInitializer {
 
@@ -18,6 +20,7 @@ public class DataInitializer {
     public CommandLineRunner createDefaultAdmin(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         return args -> {
             if (!createDefaultAdmin) {
+                log.info("Skipping default admin user creation as per configuration.");
                 return;
             }
 
@@ -30,7 +33,9 @@ public class DataInitializer {
                 admin.setPassword(passwordEncoder.encode("admin123"));
                 admin.setRole("ADMIN");
                 userRepository.save(admin);
-                System.out.println("Default admin user created: admin / admin123");
+                log.info("Default admin user created: {} / admin123", adminUsername);
+            } else {
+                log.info("Default admin user already exists. Skipping creation.");
             }
         };
     }

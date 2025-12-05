@@ -84,7 +84,11 @@ public class ReportService {
      * Mejores clientes
      */
     public List<TopCustomer> getTopCustomers(int limit) {
-        List<Order> completedOrders = orderRepository.findByStatusOrderByCreationDateDesc("completed");
+        // Workaround: Filter in memory because repository method has a type mismatch.
+        List<Order> completedOrders = orderRepository.findAll().stream()
+                .filter(o -> "completed".equalsIgnoreCase(o.getStatus()))
+                .sorted(Comparator.comparing(Order::getCreationDate).reversed())
+                .collect(Collectors.toList());
         
         Map<Integer, TopCustomer> customerMap = new HashMap<>();
         

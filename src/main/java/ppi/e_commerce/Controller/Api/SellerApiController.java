@@ -1,187 +1,113 @@
 package ppi.e_commerce.Controller.Api;
 
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import ppi.e_commerce.Dto.CreateSellerRequest;
+import ppi.e_commerce.Dto.ProductDto;
 import ppi.e_commerce.Dto.SellerDto;
 import ppi.e_commerce.Exception.ResourceNotFoundException;
-import ppi.e_commerce.Mapper.SellerMapper;
-import ppi.e_commerce.Model.Seller;
-import ppi.e_commerce.Model.User;
-import ppi.e_commerce.Repository.UserRepository;
+import ppi.e_commerce.Exception.SellerAccessDeniedException;
+import ppi.e_commerce.Exception.SellerAlreadyExistsException;
 import ppi.e_commerce.Service.SellerService;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/sellers")
 @CrossOrigin(origins = "*", maxAge = 3600)
 public class SellerApiController {
 
-    @Autowired
-    private SellerService sellerService;
+    private final SellerService sellerService;
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private SellerMapper sellerMapper;
+    public SellerApiController(SellerService sellerService) {
+        this.sellerService = sellerService;
+    }
 
     @PostMapping
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public ResponseEntity<?> createSeller(
+    public ResponseEntity<SellerDto> createSeller(
             @Valid @RequestBody CreateSellerRequest request,
             Authentication authentication) {
-        try {
-            String username = authentication.getName();
-            User user = userRepository.findByUsername(username)
-                    .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
-
-            Seller seller = new Seller();
-            seller.setBusinessName(request.getBusinessName());
-            seller.setDescription(request.getDescription());
-            seller.setWebsite(request.getWebsite());
-            seller.setTaxId(request.getTaxId());
-            seller.setPhone(request.getPhone());
-            seller.setAddress(request.getAddress());
-            seller.setCity(request.getCity());
-            seller.setState(request.getState());
-            seller.setZipCode(request.getZipCode());
-            seller.setCountry(request.getCountry());
-
-            Seller createdSeller = sellerService.createSeller(user.getId(), seller);
-            SellerDto dto = sellerMapper.toDto(createdSeller);
-            dto.setProductCount(0L);
-
-            return ResponseEntity.status(HttpStatus.CREATED).body(dto);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Error al crear vendedor: " + e.getMessage());
-        }
+        log.info("POST /api/sellers invoked by user: {}", authentication.getName());
+        SellerDto createdSeller = sellerService.createSeller(authentication.getName(), request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdSeller);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<SellerDto> getSellerById(@PathVariable Integer id) {
-        Optional<Seller> sellerOpt = sellerService.findById(id);
+    @PutMapping("/{sellerId}")
+    @PreAuthorize("hasRole('SELLER') or hasRole('ADMIN')")
+    public ResponseEntity<SellerDto> updateSeller(
+            @PathVariable Integer sellerId,
+            @Valid @RequestBody CreateSellerRequest request,
+            Authentication authentication) {
+        log.info("PUT /api/sellers/{} invoked by user: {}", sellerId, authentication.getName());
+        SellerDto updatedSeller = sellerService.updateSeller(sellerId, authentication.getName(), request);
+        return ResponseEntity.ok(updatedSeller);
+    }
 
-        if (sellerOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
+    @GetMapping
+    public ResponseEntity<List<SellerDto>> findSellers(
+            @RequestParam(defaultValue = "true") boolean active,
+            @RequestParam(required = false) Boolean verified) {
+        log.info("GET /api/sellers invoked with active={}, verified={}", active, verified);
+        List<SellerDto> sellers = sellerService.findSellers(active, verified);
+        return ResponseEntity.ok(sellers);
+    }
 
-        SellerDto dto = sellerMapper.toDto(sellerOpt.get());
-        Long productCount = sellerService.countProductsBySeller(id);
-        dto.setProductCount(productCount);
-
-        return ResponseEntity.ok(dto);
+    @GetMapping("/{sellerId}")
+    public ResponseEntity<SellerDto> getSellerById(@PathVariable Integer sellerId) {
+        log.info("GET /api/sellers/{} invoked", sellerId);
+        SellerDto seller = sellerService.findSellerById(sellerId);
+        return ResponseEntity.ok(seller);
     }
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<SellerDto> getSellerByUserId(@PathVariable Integer userId) {
-        Optional<Seller> sellerOpt = sellerService.findByUserId(userId);
-
-        if (sellerOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        SellerDto dto = sellerMapper.toDto(sellerOpt.get());
-        Long productCount = sellerService.countProductsBySeller(sellerOpt.get().getId());
-        dto.setProductCount(productCount);
-
-        return ResponseEntity.ok(dto);
+        log.info("GET /api/sellers/user/{} invoked", userId);
+        SellerDto seller = sellerService.findSellerByUserId(userId);
+        return ResponseEntity.ok(seller);
     }
 
-    @GetMapping("/{id}/products")
-    public ResponseEntity<?> getSellerProducts(
-            @PathVariable Integer id,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-
-        if (!sellerService.findById(id).isPresent()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        // TODO: Implementar paginación
-        List<ppi.e_commerce.Model.Product> products = sellerService.findById(id)
-                .map(Seller::getProducts)
-                .orElse(List.of());
-
+    @GetMapping("/{sellerId}/products")
+    public ResponseEntity<Page<ProductDto>> getSellerProducts(
+            @PathVariable Integer sellerId,
+            @PageableDefault(size = 20) Pageable pageable) {
+        log.info("GET /api/sellers/{}/products invoked with pageable: {}", sellerId, pageable);
+        Page<ProductDto> products = sellerService.findSellerProducts(sellerId, pageable);
         return ResponseEntity.ok(products);
     }
 
-    @GetMapping
-    public ResponseEntity<List<SellerDto>> getAllSellers(
-            @RequestParam(required = false) Boolean verified,
-            @RequestParam(required = false) Boolean active) {
-
-        List<Seller> sellers;
-        if (Boolean.TRUE.equals(verified)) {
-            sellers = sellerService.findAllVerified();
-        } else if (Boolean.TRUE.equals(active)) {
-            sellers = sellerService.findAllActive();
-        } else {
-            sellers = sellerService.findAllActive();
-        }
-
-        List<SellerDto> dtos = sellers.stream()
-                .map(seller -> {
-                    SellerDto dto = sellerMapper.toDto(seller);
-                    Long productCount = sellerService.countProductsBySeller(seller.getId());
-                    dto.setProductCount(productCount);
-                    return dto;
-                })
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(dtos);
+    @DeleteMapping("/{sellerId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteSeller(@PathVariable Integer sellerId) {
+        log.info("DELETE /api/sellers/{} invoked", sellerId);
+        sellerService.deleteSeller(sellerId);
+        return ResponseEntity.noContent().build();
     }
 
-    @PutMapping("/{id}")
-    @PreAuthorize("hasRole('SELLER') or hasRole('ADMIN')")
-    public ResponseEntity<?> updateSeller(
-            @PathVariable Integer id,
-            @Valid @RequestBody CreateSellerRequest request,
-            Authentication authentication) {
-        try {
-            Optional<Seller> sellerOpt = sellerService.findById(id);
-            if (sellerOpt.isEmpty()) {
-                return ResponseEntity.notFound().build();
-            }
+    @ExceptionHandler(SellerAlreadyExistsException.class)
+    public ResponseEntity<String> handleSellerAlreadyExists(SellerAlreadyExistsException ex) {
+        log.warn(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+    }
 
-            Seller seller = sellerOpt.get();
-            String username = authentication.getName();
+    @ExceptionHandler(SellerAccessDeniedException.class)
+    public ResponseEntity<String> handleSellerAccessDenied(SellerAccessDeniedException ex) {
+        log.warn(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+    }
 
-            // Verificar que el usuario es el dueño o es admin
-            if (!seller.getUser().getUsername().equals(username)
-                    && !authentication.getAuthorities().stream()
-                            .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-            }
-
-            seller.setBusinessName(request.getBusinessName());
-            seller.setDescription(request.getDescription());
-            seller.setWebsite(request.getWebsite());
-            seller.setTaxId(request.getTaxId());
-            seller.setPhone(request.getPhone());
-            seller.setAddress(request.getAddress());
-            seller.setCity(request.getCity());
-            seller.setState(request.getState());
-            seller.setZipCode(request.getZipCode());
-            seller.setCountry(request.getCountry());
-
-            Seller updatedSeller = sellerService.updateSeller(seller);
-            SellerDto dto = sellerMapper.toDto(updatedSeller);
-            dto.setProductCount(sellerService.countProductsBySeller(id));
-
-            return ResponseEntity.ok(dto);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Error al actualizar vendedor: " + e.getMessage());
-        }
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<String> handleResourceNotFound(ResourceNotFoundException ex) {
+        log.warn(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
     }
 }

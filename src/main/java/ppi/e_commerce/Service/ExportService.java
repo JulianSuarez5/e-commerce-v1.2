@@ -3,9 +3,11 @@ package ppi.e_commerce.Service;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
+import com.itextpdf.layout.properties.UnitValue;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
@@ -22,8 +24,7 @@ public class ExportService {
      * Exporta reporte de ventas a PDF
      */
     public byte[] exportSalesReportToPdf(List<Order> orders, String title) {
-        try {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             PdfWriter writer = new PdfWriter(baos);
             PdfDocument pdf = new PdfDocument(writer);
             Document document = new Document(pdf);
@@ -39,29 +40,29 @@ public class ExportService {
 
             // Tabla
             float[] columnWidths = {2, 3, 2, 2, 2};
-            Table table = new Table(columnWidths);
-            
+            Table table = new Table(UnitValue.createPercentArray(columnWidths));
+
             // Headers
-            table.addHeaderCell("Número Pedido");
-            table.addHeaderCell("Cliente");
-            table.addHeaderCell("Fecha");
-            table.addHeaderCell("Total");
-            table.addHeaderCell("Estado");
+            addHeaderCell(table, "Número Pedido");
+            addHeaderCell(table, "Cliente");
+            addHeaderCell(table, "Fecha");
+            addHeaderCell(table, "Total");
+            addHeaderCell(table, "Estado");
 
             // Datos
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
             double totalRevenue = 0;
-            
+
             for (Order order : orders) {
                 table.addCell(order.getNumber());
-                table.addCell(order.getUser() != null ? 
-                        (order.getUser().getName() != null ? order.getUser().getName() : order.getUser().getUsername()) 
+                table.addCell(order.getUser() != null ?
+                        (order.getUser().getName() != null ? order.getUser().getName() : order.getUser().getUsername())
                         : "N/A");
                 table.addCell(order.getCreationDate().format(formatter));
                 table.addCell(String.format("$%.2f", order.getTotalPrice()));
                 table.addCell(order.getStatus());
-                
-                if ("completed".equals(order.getStatus())) {
+
+                if ("completed".equalsIgnoreCase(order.getStatus())) {
                     totalRevenue += order.getTotalPrice();
                 }
             }
@@ -80,12 +81,16 @@ public class ExportService {
         }
     }
 
+    private void addHeaderCell(Table table, String header) {
+        table.addHeaderCell(new Cell().add(new Paragraph(header)).setBold());
+    }
+
     /**
      * Exporta reporte de ventas a Excel
      */
     public byte[] exportSalesReportToExcel(List<Order> orders, String sheetName) {
-        try {
-            Workbook workbook = new XSSFWorkbook();
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+             Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet(sheetName);
 
             // Estilo para headers
@@ -99,7 +104,7 @@ public class ExportService {
             // Crear header
             Row headerRow = sheet.createRow(0);
             String[] columns = {"Número Pedido", "Cliente", "Fecha", "Total", "Estado", "Dirección", "Ciudad"};
-            
+
             for (int i = 0; i < columns.length; i++) {
                 Cell cell = headerRow.createCell(i);
                 cell.setCellValue(columns[i]);
@@ -118,22 +123,22 @@ public class ExportService {
 
             for (Order order : orders) {
                 Row row = sheet.createRow(rowNum++);
-                
+
                 row.createCell(0).setCellValue(order.getNumber());
-                row.createCell(1).setCellValue(order.getUser() != null ? 
-                        (order.getUser().getName() != null ? order.getUser().getName() : order.getUser().getUsername()) 
+                row.createCell(1).setCellValue(order.getUser() != null ?
+                        (order.getUser().getName() != null ? order.getUser().getName() : order.getUser().getUsername())
                         : "N/A");
                 row.createCell(2).setCellValue(order.getCreationDate().format(formatter));
-                
+
                 Cell totalCell = row.createCell(3);
                 totalCell.setCellValue(order.getTotalPrice());
                 totalCell.setCellStyle(currencyStyle);
-                
+
                 row.createCell(4).setCellValue(order.getStatus());
                 row.createCell(5).setCellValue(order.getShippingAddress() != null ? order.getShippingAddress() : "");
                 row.createCell(6).setCellValue(order.getShippingCity() != null ? order.getShippingCity() : "");
-                
-                if ("completed".equals(order.getStatus())) {
+
+                if ("completed".equalsIgnoreCase(order.getStatus())) {
                     totalRevenue += order.getTotalPrice();
                 }
             }
@@ -150,11 +155,7 @@ public class ExportService {
                 sheet.autoSizeColumn(i);
             }
 
-            // Convertir a bytes
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
             workbook.write(baos);
-            workbook.close();
-            
             return baos.toByteArray();
         } catch (Exception e) {
             throw new RuntimeException("Error al generar Excel: " + e.getMessage(), e);
@@ -165,8 +166,8 @@ public class ExportService {
      * Exporta productos a Excel
      */
     public byte[] exportProductsToExcel(List<ppi.e_commerce.Model.Product> products) {
-        try {
-            Workbook workbook = new XSSFWorkbook();
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+             Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Productos");
 
             // Estilo para headers
@@ -180,7 +181,7 @@ public class ExportService {
             // Header
             Row headerRow = sheet.createRow(0);
             String[] columns = {"ID", "Nombre", "Descripción", "Precio", "Cantidad", "Categoría", "Marca", "Activo"};
-            
+
             for (int i = 0; i < columns.length; i++) {
                 Cell cell = headerRow.createCell(i);
                 cell.setCellValue(columns[i]);
@@ -191,7 +192,7 @@ public class ExportService {
             int rowNum = 1;
             for (ppi.e_commerce.Model.Product product : products) {
                 Row row = sheet.createRow(rowNum++);
-                
+
                 row.createCell(0).setCellValue(product.getId());
                 row.createCell(1).setCellValue(product.getName());
                 row.createCell(2).setCellValue(product.getDescription() != null ? product.getDescription() : "");
@@ -207,10 +208,7 @@ public class ExportService {
                 sheet.autoSizeColumn(i);
             }
 
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
             workbook.write(baos);
-            workbook.close();
-            
             return baos.toByteArray();
         } catch (Exception e) {
             throw new RuntimeException("Error al generar Excel de productos: " + e.getMessage(), e);

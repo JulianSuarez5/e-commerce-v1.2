@@ -8,6 +8,12 @@ interface ProtectedRouteProps {
   requiredRole?: string;
 }
 
+interface User {
+  id: string;
+  email: string;
+  role: string;
+}
+
 export default function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
   const router = useRouter();
   const [isAuthorized, setIsAuthorized] = useState(false);
@@ -33,7 +39,7 @@ export default function ProtectedRoute({ children, requiredRole }: ProtectedRout
       });
 
       if (response.ok) {
-        const user = await response.json();
+        const user: User = await response.json();
         
         if (requiredRole && user.role !== requiredRole && user.role !== 'ADMIN') {
           router.push('/access-denied');

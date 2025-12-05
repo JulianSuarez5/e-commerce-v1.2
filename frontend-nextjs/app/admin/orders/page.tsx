@@ -4,8 +4,20 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Eye, Truck, CheckCircle } from 'lucide-react';
 
+// Define the possible order statuses
+type OrderStatus = 'Processing' | 'Shipped' | 'Delivered' | 'Pending';
+
+// Define the type for an order
+interface Order {
+  id: string;
+  customer: string;
+  date: string;
+  total: number;
+  status: OrderStatus;
+}
+
 // Mock data for orders
-const mockOrders = [
+const mockOrders: Order[] = [
   { id: 'ORD-001', customer: 'John Doe', date: '2023-10-26', total: 125.50, status: 'Processing' },
   { id: 'ORD-002', customer: 'Jane Smith', date: '2023-10-25', total: 89.99, status: 'Shipped' },
   { id: 'ORD-003', customer: 'Bob Johnson', date: '2023-10-25', total: 340.00, status: 'Delivered' },
@@ -13,7 +25,7 @@ const mockOrders = [
   { id: 'ORD-005', customer: 'Charlie Brown', date: '2023-10-23', total: 199.99, status: 'Delivered' },
 ];
 
-const statusColors = {
+const statusColors: Record<OrderStatus, string> = {
   Processing: 'bg-yellow-100 text-yellow-800',
   Shipped: 'bg-blue-100 text-blue-800',
   Delivered: 'bg-green-100 text-green-800',
@@ -21,7 +33,7 @@ const statusColors = {
 };
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState(mockOrders);
+  const [orders, setOrders] = useState<Order[]>(mockOrders);
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen">

@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense, useRef, useState } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas, useFrame, type RootState } from '@react-three/fiber';
 import { OrbitControls, Environment, useGLTF, PerspectiveCamera, ContactShadows } from '@react-three/drei';
 import { ProductDto } from '@/types/product';
 import { motion } from 'framer-motion';
@@ -13,10 +13,10 @@ interface Product3DViewerProps {
 
 function Model({ url }: { url: string }) {
   const { scene } = useGLTF(url);
-  const meshRef = useRef<THREE.Group>(null);
+  const meshRef = useRef<THREE.Group>(null!);
   const [hovered, setHovered] = useState(false);
 
-  useFrame((state) => {
+  useFrame((state: RootState) => {
     if (meshRef.current && !hovered) {
       meshRef.current.rotation.y += 0.005;
     }

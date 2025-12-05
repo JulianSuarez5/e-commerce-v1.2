@@ -1,205 +1,153 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Mail, Lock, User, Phone } from 'lucide-react';
-import AppleHeader from '@/components/AppleHeader';
-import { Container } from '@/ui/container';
-import { Card } from '@/ui/card';
+import toast from 'react-hot-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { Input } from '@/ui/input';
 import { Button } from '@/ui/button';
+import { Mail, Lock, User, Phone } from 'lucide-react';
 
 export default function RegisterPage() {
+  const router = useRouter();
+  const { register, loading } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     username: '',
     email: '',
+    phone: '',
     password: '',
     confirmPassword: '',
-    phone: '',
   });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError('');
-
     if (formData.password !== formData.confirmPassword) {
-      setError('Las contraseñas no coinciden');
+      toast.error('Las contraseñas no coinciden.');
       return;
     }
 
-    setLoading(true);
+    const toastId = toast.loading('Creando tu cuenta...');
 
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name,
-          username: formData.username,
-          email: formData.email,
-          password: formData.password,
-          phone: formData.phone,
-        }),
-      });
-
-      if (response.ok) {
-        window.location.href = '/login?registered=true';
-      } else {
-        const data = await response.json();
-        setError(data.error || 'Error al registrarse');
-      }
-    } catch (err) {
-      setError('Error al registrarse');
-    } finally {
-      setLoading(false);
+      const { password, confirmPassword, ...registerData } = formData;
+      await register({ ...registerData, password });
+      toast.success('¡Registro completado! Por favor, inicia sesión.', { id: toastId });
+      router.push('/login');
+    } catch (error: any) {
+      toast.error(error.message || 'Error al registrar la cuenta.', { id: toastId });
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#FFFFFF]">
-      <AppleHeader />
+    <div className="relative flex min-h-screen w-full flex-col items-center justify-center bg-gradient-to-br from-gray-100 via-white to-gray-50 overflow-hidden">
+      <div className="absolute inset-0 bg-[url(/grid.svg)] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]" />
 
-      <Container className="pt-24 pb-16">
-        <div className="max-w-md mx-auto">
-          <Link 
-            href="/" 
-            className="inline-flex items-center space-x-2 text-body text-[#007AFF] mb-8 hover:opacity-80 transition-opacity"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Volver</span>
-          </Link>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className=""
-          >
-            <Card className="p-8">
-              <h1 className="text-title text-2xl mb-2">Crear cuenta</h1>
-              <p className="text-subtitle mb-8">Únete a nuestra plataforma.</p>
-
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <div>
-                  <label className="block text-xs font-medium text-[#86868B] mb-2">
-                    Nombre completo
-                  </label>
-                  <div className="relative">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#86868B]" />
-                    <Input
-                      type="text"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="pl-12"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-[#86868B] mb-2">
-                    Usuario
-                  </label>
-                  <Input
-                    type="text"
-                    value={formData.username}
-                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-[#86868B] mb-2">
-                    Email
-                  </label>
-                  <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#86868B]" />
-                    <Input
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="pl-12"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-[#86868B] mb-2">
-                    Teléfono
-                  </label>
-                  <div className="relative">
-                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#86868B]" />
-                    <Input
-                      type="tel"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="pl-12"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-[#86868B] mb-2">
-                    Contraseña
-                  </label>
-                  <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#86868B]" />
-                    <Input
-                      type="password"
-                      value={formData.password}
-                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      className="pl-12"
-                      required
-                      minLength={6}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-[#86868B] mb-2">
-                    Confirmar contraseña
-                  </label>
-                  <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#86868B]" />
-                    <Input
-                      type="password"
-                      value={formData.confirmPassword}
-                      onChange={(e) =>
-                        setFormData({ ...formData, confirmPassword: e.target.value })
-                      }
-                      className="pl-12"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {error && (
-                  <div className="rounded-[10px] border border-[#FFE5E5] bg-[#FFF8F8] px-4 py-3 text-xs text-[#B3261E]">
-                    {error}
-                  </div>
-                )}
-
-                <Button type="submit" disabled={loading} fullWidth>
-                  {loading ? 'Creando cuenta…' : 'Crear cuenta'}
-                </Button>
-              </form>
-
-              <p className="mt-6 text-center text-xs text-[#86868B]">
-                ¿Ya tienes cuenta?{' '}
-                <Link href="/login" className="text-[#007AFF] hover:opacity-80">
-                  Inicia sesión
-                </Link>
-              </p>
-            </Card>
-          </motion.div>
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: 'easeInOut' }}
+        className="relative z-10 w-full max-w-md px-4 py-16"
+      >
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold tracking-tight text-gray-900">Crea tu Cuenta</h1>
+          <p className="mt-2 text-gray-600">Únete a la nueva era del e-commerce premium.</p>
         </div>
-      </Container>
+
+        <div className="relative rounded-2xl border border-gray-200/80 bg-white/60 p-8 shadow-2xl backdrop-blur-lg">
+          <form onSubmit={handleRegister} className="space-y-4">
+            <div className="relative">
+              <User className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+              <Input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="Nombre completo"
+                className="pl-10"
+                required
+              />
+            </div>
+            <div className="relative">
+               <Input
+                type="text"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                placeholder="Nombre de usuario"
+                required
+              />
+            </div>
+            <div className="relative">
+              <Mail className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+              <Input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="tu@email.com"
+                className="pl-10"
+                required
+              />
+            </div>
+            <div className="relative">
+              <Phone className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+              <Input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder="Teléfono (Opcional)"
+                className="pl-10"
+              />
+            </div>
+            <div className="relative">
+              <Lock className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+              <Input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Contraseña"
+                className="pl-10"
+                required
+              />
+            </div>
+            <div className="relative">
+              <Lock className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+              <Input
+                type="password"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                placeholder="Confirmar contraseña"
+                className="pl-10"
+                required
+              />
+            </div>
+
+            <Button type="submit" disabled={loading} fullWidth size="lg">
+              {loading ? 'Creando cuenta...' : 'Crear Cuenta'}
+            </Button>
+          </form>
+
+          <div className="mt-6 text-center text-sm text-gray-600">
+            <p>
+              ¿Ya tienes una cuenta? {' '}
+              <Link href="/login" className="font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+                Inicia sesión
+              </Link>
+            </p>
+          </div>
+        </div>
+      </motion.div>
     </div>
   );
 }
-

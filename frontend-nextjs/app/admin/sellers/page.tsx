@@ -4,22 +4,35 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Briefcase, CheckCircle, XCircle } from 'lucide-react';
 
+// Define the possible seller statuses
+type SellerStatus = 'Approved' | 'Pending' | 'Rejected';
+
+// Define the type for a seller
+interface Seller {
+  id: number;
+  name: string;
+  owner: string;
+  email: string;
+  status: SellerStatus;
+  registered: string;
+}
+
 // Mock data for sellers
-const mockSellers = [
+const mockSellers: Seller[] = [
   { id: 1, name: 'Gadget Store', owner: 'Seller One', email: 'seller1@example.com', status: 'Approved', registered: '2023-03-01' },
   { id: 2, name: 'Fashion Hub', owner: 'Seller Two', email: 'seller2@example.com', status: 'Approved', registered: '2023-04-05' },
   { id: 3, name: 'Book Nook', owner: 'Seller Three', email: 'seller3@example.com', status: 'Pending', registered: '2023-10-20' },
   { id: 4, name: 'Home Goods Co.', owner: 'Seller Four', email: 'seller4@example.com', status: 'Rejected', registered: '2023-09-15' },
 ];
 
-const statusStyles = {
+const statusStyles: Record<SellerStatus, string> = {
   Approved: "bg-green-100 text-green-800",
   Pending: "bg-yellow-100 text-yellow-800",
   Rejected: "bg-red-100 text-red-800",
 };
 
 export default function SellersPage() {
-  const [sellers, setSellers] = useState(mockSellers);
+  const [sellers, setSellers] = useState<Seller[]>(mockSellers);
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredSellers = sellers.filter(seller =>

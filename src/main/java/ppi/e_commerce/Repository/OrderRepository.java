@@ -1,11 +1,12 @@
 package ppi.e_commerce.Repository;
 
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 import ppi.e_commerce.Model.Order;
 import ppi.e_commerce.Model.OrderStatus;
 import ppi.e_commerce.Model.User;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -30,4 +31,9 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     long countByStatus(OrderStatus status);
 
     List<Order> findByUserAndStatus(User user, OrderStatus status);
+
+    @Query("SELECT CASE WHEN COUNT(od) > 0 THEN TRUE ELSE FALSE END " +
+           "FROM OrderDetail od JOIN od.order o " +
+           "WHERE o.user.id = :userId AND od.product.id = :productId AND o.status = 'COMPLETED'")
+    boolean existsByUserAndProductInOrder(@Param("userId") Integer userId, @Param("productId") Integer productId);
 }

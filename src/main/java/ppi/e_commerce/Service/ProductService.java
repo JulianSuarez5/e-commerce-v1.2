@@ -1,33 +1,20 @@
 package ppi.e_commerce.Service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import ppi.e_commerce.Dto.ProductDto;
-import ppi.e_commerce.Model.Product;
-
-import java.util.List;
-import java.util.Optional;
 
 public interface ProductService {
-    Product saveProduct(Product product);
 
-    Optional<ProductDto> getProductById(Integer id);
+    Page<ProductDto> findProducts(Integer categoryId, Integer brandId, Double minPrice, Double maxPrice, String query, Pageable pageable);
 
-    Product updateProduct(Product product);
+    ProductDto findById(Integer id);
 
-    void deleteProduct(Integer id);
+    Page<ProductDto> findProductsBySeller(Integer sellerId, Pageable pageable);
 
-    List<ProductDto> findAll();
+    ProductDto createProduct(ProductDto productDto);
 
-    List<ProductDto> findActiveProducts();
+    ProductDto updateProduct(Integer productId, ProductDto productDto);
 
-    Long countProducts();
-
-    List<ProductDto> findByCategory(Integer categoryId);
-
-    List<ProductDto> findByBrand(Integer brandId);
-
-    List<ProductDto> searchProducts(String query);
-
-    List<ProductDto> findTopSellingProducts(int limit);
-
-    List<ProductDto> filterProducts(Integer categoryId, Integer brandId, Double minPrice, Double maxPrice, String query);
+    void deleteProduct(Integer productId);
 }

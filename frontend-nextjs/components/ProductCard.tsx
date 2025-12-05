@@ -1,74 +1,58 @@
 'use client';
 
-import Link from 'next/link';
-import { ProductDto } from '@/types/product';
+import Image from 'next/image';
+import { Button } from '@/ui/button';
 import { motion } from 'framer-motion';
-import { Box } from 'lucide-react';
-import { Card } from '@/ui/card';
+import { cn } from '@/lib/cn';
+import { ProductDto } from '@/types/product';
 
 interface ProductCardProps {
   product: ProductDto;
+  className?: string;
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, className }: ProductCardProps) {
+  const imageUrl = product.imageUrl || '/placeholder-image.png';
+
+  const cardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } },
+  };
+
   return (
-    <Link href={`/products/${product.id}`}>
-      <motion.div
-        whileHover={{ y: -4 }}
-        transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-        className="h-full"
-      >
-        <Card className="h-full flex flex-col group cursor-pointer">
-          {/* Image Container */}
-          <div className="relative aspect-square bg-[#F5F5F7] overflow-hidden">
-          {product.imageUrl ? (
-            <img
-              src={`http://localhost:8081${product.imageUrl}`}
-              alt={product.name}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <Box className="w-16 h-16 text-[#86868B]" />
-            </div>
-          )}
-          
-          {/* 3D Badge */}
-          {product.model3dUrl && (
-            <div className="absolute top-3 right-3 bg-[#007AFF] text-white text-[11px] font-medium px-2 py-1 rounded-full">
-              3D
-            </div>
-          )}
-          </div>
+    <motion.div
+      variants={cardVariants}
+      initial="hidden"
+      animate="visible"
+      whileHover={{ y: -5, transition: { duration: 0.2 } }}
+      className={cn(
+        "group relative flex flex-col overflow-hidden rounded-2xl border border-gray-200/80 bg-white/50 backdrop-blur-xl shadow-lg transition-all duration-300 hover:shadow-2xl",
+        className
+      )}
+    >
+      <div className="relative aspect-square w-full overflow-hidden">
+        <Image
+          src={imageUrl}
+          alt={product.name}
+          fill
+          className="object-cover transition-transform duration-300 group-hover:scale-105"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+        />
+        <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 p-4">
+          <p className="text-sm font-medium text-white/80">{product.categoryName}</p>
+          <h3 className="mt-1 text-lg font-semibold text-white">{product.name}</h3>
+        </div>
+      </div>
 
-          {/* Content */}
-          <div className="p-5 flex flex-col flex-grow">
-          <h3 className="text-title text-base text-[#1D1D1F] mb-2 line-clamp-2 group-hover:text-[#007AFF] transition-colors">
-            {product.name}
-          </h3>
-          
-          {product.description && (
-            <p className="text-body text-xs text-[#86868B] mb-4 line-clamp-2 flex-grow">
-              {product.description}
-            </p>
-          )}
-
-          {/* Price and Info */}
-          <div className="flex items-center justify-between mt-auto pt-4 border-t border-[#E5E5E7]">
-            <div>
-              <span className="text-title text-lg text-[#1D1D1F]">
-                ${product.price.toFixed(2)}
-              </span>
-            </div>
-            {product.sellerName && (
-              <span className="text-xs text-[#86868B]">
-                {product.sellerName}
-              </span>
-            )}
-          </div>
-          </div>
-        </Card>
-      </motion.div>
-    </Link>
+      <div className="flex flex-1 flex-col p-4">
+        <div className="flex-1">
+          <p className="text-lg font-semibold text-gray-900">${product.price.toFixed(2)}</p>
+        </div>
+        <Button className="mt-4 w-full rounded-lg bg-blue-600 text-white transition-colors hover:bg-blue-700">
+          Agregar al Carrito
+        </Button>
+      </div>
+    </motion.div>
   );
 }

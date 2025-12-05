@@ -1,96 +1,105 @@
 package ppi.e_commerce.Service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ppi.e_commerce.Dto.CreateReviewRequest;
+import ppi.e_commerce.Dto.ReviewDto;
+import ppi.e_commerce.Dto.ReviewStatsDto;
 import ppi.e_commerce.Exception.BusinessException;
 import ppi.e_commerce.Exception.ResourceNotFoundException;
+import ppi.e_commerce.Mapper.ReviewMapper;
 import ppi.e_commerce.Model.Product;
 import ppi.e_commerce.Model.Review;
 import ppi.e_commerce.Model.User;
+import ppi.e_commerce.Repository.OrderRepository;
 import ppi.e_commerce.Repository.ProductRepository;
 import ppi.e_commerce.Repository.ReviewRepository;
 import ppi.e_commerce.Repository.UserRepository;
 
 import java.util.List;
-import java.util.Optional;
 
+@Slf4j
 @Service
 @Transactional
 public class ReviewServiceImpl implements ReviewService {
 
-    @Autowired
-    private ReviewRepository reviewRepository;
+    private final ReviewRepository reviewRepository;
+    private final ProductRepository productRepository;
+    private final UserRepository userRepository;
+    private final OrderRepository orderRepository;
+    private final ReviewMapper reviewMapper;
 
     @Autowired
-    private ProductRepository productRepository;
-
-    @Autowired
-    private UserRepository userRepository;
+    public ReviewServiceImpl(ReviewRepository reviewRepository,
+                           ProductRepository productRepository,
+                           UserRepository userRepository,
+                           OrderRepository orderRepository,
+                           ReviewMapper reviewMapper) {
+        this.reviewRepository = reviewRepository;
+        this.productRepository = productRepository;
+        this.userRepository = userRepository;
+        this.orderRepository = orderRepository;
+        this.reviewMapper = reviewMapper;
+    }
 
     @Override
-    public Review createReview(Integer productId, Integer userId, Review review) {
+    public ReviewDto createReview(Integer productId, String username, CreateReviewRequest request) {
+        log.info("Attempting to create a review for product {} by user {}", productId, username);
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));
+
         Product product = productRepository.findById(productId)
-            .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado"));
-        
-        User user = userRepository.findById(userId)
-            .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with ID: " + productId));
 
-        // Verificar si el usuario ya hizo una review
-        if (reviewRepository.findByProductIdAndUserId(productId, userId).isPresent()) {
-            throw new BusinessException("Ya has realizado una reseña para este producto");
+        if (reviewRepository.findByProductIdAndUserId(productId, user.getId()).isPresent()) {
+            throw new BusinessException("User has already submitted a review for this product.");
         }
 
-        review.setProduct(product);
+        boolean isVerifiedPurchase = orderRepository.existsByUserAndProductInOrder(user.getId(), productId);
+        log.debug("User {} purchase status for product {}: {}", username, productId, isVerifiedPurchase ? "Verified" : "Not Verified");
+
+        Review review = new Review();
         review.setUser(user);
-        return reviewRepository.save(review);
+        review.setProduct(product);
+        review.setRating(request.getRating());
+        review.setTitle(request.getTitle());
+        review.setComment(request.getComment());
+        review.setVerifiedPurchase(isVerifiedPurchase);
+        review.setActive(true); // Default to active
+
+        Review savedReview = reviewRepository.save(review);
+        log.info("Successfully created review with ID {} for product {}", savedReview.getId(), productId);
+
+        return reviewMapper.toDto(savedReview);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Review> getProductReviews(Integer productId) {
-        return reviewRepository.findByProductIdAndActiveTrueOrderByCreatedAtDesc(productId);
+    public List<ReviewDto> getProductReviews(Integer productId) {
+        log.info("Fetching reviews for product ID: {}", productId);
+        List<Review> reviews = reviewRepository.findByProductIdAndActiveTrueOrderByCreatedAtDesc(productId);
+        return reviewMapper.toDtoList(reviews);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<Review> findById(Integer id) {
-        return reviewRepository.findById(id);
+    public ReviewStatsDto getReviewStats(Integer productId) {
+        log.info("Fetching review statistics for product ID: {}", productId);
+        Double averageRating = reviewRepository.getAverageRatingByProductId(productId);
+        Long reviewCount = reviewRepository.countByProductId(productId);
+        return new ReviewStatsDto(averageRating != null ? averageRating : 0.0, reviewCount);
     }
 
     @Override
-    public Review updateReview(Review review) {
-        if (!reviewRepository.existsById(review.getId())) {
-            throw new ResourceNotFoundException("Reseña no encontrada");
+    public void deleteReview(Integer reviewId) {
+        log.info("Deleting review with ID: {}", reviewId);
+        if (!reviewRepository.existsById(reviewId)) {
+            throw new ResourceNotFoundException("Review not found with ID: " + reviewId);
         }
-        return reviewRepository.save(review);
-    }
-
-    @Override
-    public void deleteReview(Integer id) {
-        if (!reviewRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Reseña no encontrada");
-        }
-        reviewRepository.deleteById(id);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Double getAverageRating(Integer productId) {
-        Double avg = reviewRepository.getAverageRatingByProductId(productId);
-        return avg != null ? avg : 0.0;
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Long getReviewCount(Integer productId) {
-        return reviewRepository.countByProductId(productId);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public boolean hasUserReviewed(Integer productId, Integer userId) {
-        return reviewRepository.findByProductIdAndUserId(productId, userId).isPresent();
+        reviewRepository.deleteById(reviewId);
+        log.info("Successfully deleted review with ID: {}", reviewId);
     }
 }
-

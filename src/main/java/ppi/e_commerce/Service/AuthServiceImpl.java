@@ -1,137 +1,108 @@
 package ppi.e_commerce.Service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import ppi.e_commerce.Dto.AuthRequest;
+import ppi.e_commerce.Dto.AuthResponse;
+import ppi.e_commerce.Dto.RefreshTokenRequest;
+import ppi.e_commerce.Dto.RegisterRequest;
+import ppi.e_commerce.Exception.AuthenticationException;
+import ppi.e_commerce.Exception.UserAlreadyExistsException;
 import ppi.e_commerce.Model.User;
-import ppi.e_commerce.Repository.UserRepository;
-import ppi.e_commerce.Utils.PasswordUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import ppi.e_commerce.Utils.JwtUtil;
 
-import java.time.LocalDateTime;
-import java.util.Optional;
-
+@Slf4j
 @Service
-public class AuthServiceImpl {
+public class AuthServiceImpl implements AuthService {
 
-    private static final Logger log = LoggerFactory.getLogger(AuthServiceImpl.class);
+    private final AuthenticationManager authenticationManager;
+    private final JwtUtil jwtUtil;
+    private final UserService userService;
 
     @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private EmailService emailService;
-
-    /**
-     * Restablecer contraseña - Envía contraseña temporal por correo
-     */
-    @Transactional
-    public boolean restablecerContra(String correo) {
-        log.info("🔐 Solicitud de restablecimiento para: {}", correo);
-        
-        Optional<User> optUser = userRepository.findByEmail(correo);
-        
-        if (optUser.isEmpty()) {
-            log.warn("⚠️ Email no encontrado: {}", correo);
-            // Por seguridad, siempre devolver true (no revelar si existe el email)
-            return true;
-        }
-
-        User usuario = optUser.get();
-        
-        // Generar contraseña temporal segura
-        String nuevaClave = PasswordUtil.generarClaveSegura();
-        String hash = PasswordUtil.encriptar(nuevaClave);
-
-        // Guardar contraseña temporal
-        usuario.setTempPasswordHash(hash);
-        usuario.setUsingTempPassword(true);
-        usuario.setTempPasswordExpiry(LocalDateTime.now().plusMinutes(60));
-        userRepository.save(usuario);
-
-        log.info("✅ Contraseña temporal generada para: {}", usuario.getUsername());
-        log.debug("🔑 Contraseña temporal: {}", nuevaClave); // Solo para debug
-
-        // Enviar correo
-        String nombre = usuario.getName() != null ? usuario.getName() : usuario.getUsername();
-        boolean enviado = emailService.enviarCorreoRecuperacion(correo, nombre, nuevaClave);
-        
-        if (enviado) {
-            log.info("📧 Correo de recuperación enviado a: {}", correo);
-        } else {
-            log.error("❌ Error al enviar correo a: {}", correo);
-        }
-        
-        return enviado;
+    public AuthServiceImpl(AuthenticationManager authenticationManager, JwtUtil jwtUtil, UserService userService) {
+        this.authenticationManager = authenticationManager;
+        this.jwtUtil = jwtUtil;
+        this.userService = userService;
     }
 
-    /**
-     * Verificar si la contraseña temporal es válida
-     */
-    public boolean verificarContrasenaTemporal(User usuario, String contrasena) {
-        if (!usuario.isUsingTempPassword() || usuario.getTempPasswordExpiry() == null) {
-            log.debug("Usuario no está usando contraseña temporal");
-            return false;
+    @Override
+    public AuthResponse login(AuthRequest authRequest) {
+        try {
+            authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword())
+            );
+
+            User user = userService.findByUsername(authRequest.getUsername())
+                .or(() -> userService.findByEmail(authRequest.getUsername()))
+                .orElseThrow(() -> new AuthenticationException("User not found after successful authentication"));
+
+            return createAuthResponse(user);
+        } catch (BadCredentialsException e) {
+            log.warn("Invalid credentials for user: {}", authRequest.getUsername());
+            throw new AuthenticationException("Invalid credentials");
         }
-        
-        if (LocalDateTime.now().isAfter(usuario.getTempPasswordExpiry())) {
-            log.warn("⏰ Contraseña temporal expirada para: {}", usuario.getUsername());
-            return false;
-        }
-        
-        boolean valida = PasswordUtil.verificar(contrasena, usuario.getTempPasswordHash());
-        log.debug("Verificación de contraseña temporal: {}", valida ? "✅" : "❌");
-        
-        return valida;
     }
 
-    /**
-     * Cambiar a contraseña permanente
-     */
-    @Transactional
-    public void cambiarAPasswordPermanente(User usuario, String nuevaContrasena) {
-        log.info("🔄 Cambiando a contraseña permanente para: {}", usuario.getUsername());
-        
-        String hash = PasswordUtil.encriptar(nuevaContrasena);
-        usuario.setPassword(hash);
-        usuario.setUsingTempPassword(false);
-        usuario.setTempPasswordHash(null);
-        usuario.setTempPasswordExpiry(null);
-        
-        userRepository.save(usuario);
-        log.info("✅ Contraseña permanente establecida");
-    }
-
-    /**
-     * Verificar si el usuario está usando contraseña temporal
-     */
-    public boolean estaUsandoContrasenaTemporal(User usuario) {
-        boolean usando = usuario.isUsingTempPassword() && 
-                        usuario.getTempPasswordExpiry() != null && 
-                        LocalDateTime.now().isBefore(usuario.getTempPasswordExpiry());
-        
-        if (usando) {
-            long minutosRestantes = java.time.Duration.between(
-                LocalDateTime.now(), 
-                usuario.getTempPasswordExpiry()
-            ).toMinutes();
-            
-            log.info("⏰ Usuario {} tiene contraseña temporal válida por {} minutos más", 
-                    usuario.getUsername(), minutosRestantes);
+    @Override
+    public AuthResponse register(RegisterRequest registerRequest) {
+        if (userService.findByUsername(registerRequest.getUsername()).isPresent()) {
+            throw new UserAlreadyExistsException("Username is already in use");
         }
-        
-        return usando;
+
+        if (userService.findByEmail(registerRequest.getEmail()).isPresent()) {
+            throw new UserAlreadyExistsException("Email is already registered");
+        }
+
+        User user = userService.registerUser(registerRequest);
+        return createAuthResponse(user);
     }
 
-    /**
-     * Limpiar contraseñas temporales expiradas (se puede ejecutar periódicamente)
-     */
-    @Transactional
-    public void limpiarContrasenasTemporalesExpiradas() {
-        log.info("🧹 Limpiando contraseñas temporales expiradas...");
-        
-        // Aquí podrías implementar una query que limpie todas las contraseñas temporales expiradas
-        // Por ahora, dejamos que se limpien al intentar usarlas
+    @Override
+    public AuthResponse refreshToken(RefreshTokenRequest refreshTokenRequest) {
+        String refreshToken = refreshTokenRequest.getRefreshToken();
+        try {
+            String username = jwtUtil.extractUsername(refreshToken);
+            if (jwtUtil.validateToken(refreshToken, username)) {
+                User user = userService.findByUsername(username)
+                    .orElseThrow(() -> new AuthenticationException("User not found for refresh token"));
+                return createAuthResponse(user);
+            }
+            throw new AuthenticationException("Invalid refresh token");
+        } catch (Exception e) {
+            throw new AuthenticationException("Invalid refresh token", e);
+        }
+    }
+
+    @Override
+    public AuthResponse validateToken(String token) {
+        try {
+            String jwtToken = token.substring(7);
+            String username = jwtUtil.extractUsername(jwtToken);
+
+            if (jwtUtil.validateToken(jwtToken, username)) {
+                User user = userService.findByUsername(username)
+                    .orElseThrow(() -> new AuthenticationException("User not found for token validation"));
+                return createAuthResponse(user, jwtToken, false);
+            }
+            throw new AuthenticationException("Invalid token");
+        } catch (Exception e) {
+            throw new AuthenticationException("Invalid token", e);
+        }
+    }
+
+    private AuthResponse createAuthResponse(User user) {
+        return createAuthResponse(user, null, true);
+    }
+
+    private AuthResponse createAuthResponse(User user, String accessToken, boolean generateRefreshToken) {
+        String role = user.getRole() != null ? user.getRole().replace("ROLE_", "") : "USER";
+        String newAccessToken = (accessToken != null) ? accessToken : jwtUtil.generateToken(user.getUsername(), role);
+        String newRefreshToken = generateRefreshToken ? jwtUtil.generateRefreshToken(user.getUsername()) : null;
+        return new AuthResponse(newAccessToken, newRefreshToken, user.getUsername(), role, user.getId(), user.getEmail(), user.getName());
     }
 }
