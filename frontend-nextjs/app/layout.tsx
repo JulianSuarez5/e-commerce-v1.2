@@ -1,10 +1,10 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
-import { Toaster } from 'react-hot-toast';
+import { AppleHeader } from '@/components/AppleHeader';
+import { Providers } from '@/components/Providers';
 import { cn } from '@/lib/cn';
 import './globals.css';
 
-// Configuración de la fuente de Google
 const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
@@ -40,33 +40,10 @@ export default function RootLayout({
           "min-h-screen"
         )}
       >
-        {/* Proveedor de notificaciones */}
-        <Toaster
-          position="bottom-center"
-          gutter={8}
-          toastOptions={{
-            duration: 4000,
-            style: {
-              background: '#333',
-              color: '#fff',
-              borderRadius: '12px',
-              padding: '16px',
-            },
-            success: {
-              iconTheme: {
-                primary: '#10b981',
-                secondary: '#fff',
-              },
-            },
-            error: {
-              iconTheme: {
-                primary: '#ef4444',
-                secondary: '#fff',
-              },
-            },
-          }}
-        />
-        {children}
+        <Providers>
+          <AppleHeader />
+          {children}
+        </Providers>
       </body>
     </html>
   );

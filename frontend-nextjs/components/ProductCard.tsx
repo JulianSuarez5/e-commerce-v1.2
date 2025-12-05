@@ -12,7 +12,7 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, className }: ProductCardProps) {
-  const imageUrl = product.imageUrl || '/placeholder-image.png';
+  const imageUrl = product.imageUrl || 'https://placehold.co/600x600/E5E7EB/343A40?text=Producto';
 
   const cardVariants = {
     hidden: { opacity: 0, y: 20 },
