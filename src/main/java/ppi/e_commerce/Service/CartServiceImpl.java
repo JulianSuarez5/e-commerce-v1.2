@@ -18,6 +18,7 @@ import ppi.e_commerce.Repository.CartRepository;
 import ppi.e_commerce.Repository.ProductRepository;
 import ppi.e_commerce.Repository.UserRepository;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -85,7 +86,7 @@ public class CartServiceImpl implements CartService {
     public CartDto updateItemInCart(String username, Long cartItemId, Integer quantity) {
         log.info("User '{}' is updating cart item ID '{}' to quantity: {}.", username, cartItemId, quantity);
         User user = findUserByUsername(username);
-        CartItem item = findCartItemById(cartItemId);
+        CartItem item = findCartItemById(cartItemId.intValue());
 
         validateCartItemOwnership(user, item);
 
@@ -112,7 +113,7 @@ public class CartServiceImpl implements CartService {
     public CartDto removeItemFromCart(String username, Long cartItemId) {
         log.info("User '{}' is removing item ID '{}' from their cart.", username, cartItemId);
         User user = findUserByUsername(username);
-        CartItem item = findCartItemById(cartItemId);
+        CartItem item = findCartItemById(cartItemId.intValue());
         
         validateCartItemOwnership(user, item);
 
@@ -154,7 +155,7 @@ public class CartServiceImpl implements CartService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));
     }
 
-    private CartItem findCartItemById(Long cartItemId) {
+    private CartItem findCartItemById(Integer cartItemId) {
         return cartItemRepository.findById(cartItemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart item not found with ID: " + cartItemId));
     }
@@ -201,6 +202,30 @@ public class CartServiceImpl implements CartService {
         return dto;
     }
 
+    @Override
+    public boolean isProductInCart(User user, Product product) {
+        Cart cart = getOrCreateCart(user);
+        return cartItemRepository.findByCartAndProduct(cart, product).isPresent();
+    }
+
+    @Override
+    public int getCartItemCount(User user) {
+        Cart cart = getOrCreateCart(user);
+        return cart.getCartItems().stream().mapToInt(CartItem::getQuantity).sum();
+    }
+
+    @Override
+    public BigDecimal getCartTotal(User user) {
+        Cart cart = getOrCreateCart(user);
+        return BigDecimal.valueOf(cart.getCartItems().stream().mapToDouble(item -> item.getPrice() * item.getQuantity()).sum());
+    }
+
+    @Override
+    public List<CartItem> getCartItems(User user) {
+        Cart cart = getOrCreateCart(user);
+        return cart.getCartItems();
+    }
+
     // --- Deprecated / Old Methods ---
     // The methods below are kept for retro-compatibility but should be phased out.
 
@@ -233,7 +258,7 @@ public class CartServiceImpl implements CartService {
     @Transactional
     public CartItem updateCartItem(Integer cartItemId, Integer quantity) {
         // This method is problematic: no ownership check.
-        Optional<CartItem> cartItemOpt = cartItemRepository.findById(cartItemId.longValue());
+        Optional<CartItem> cartItemOpt = cartItemRepository.findById(cartItemId);
         if (cartItemOpt.isPresent()) {
             CartItem cartItem = cartItemOpt.get();
             cartItem.setQuantity(quantity);
@@ -245,7 +270,7 @@ public class CartServiceImpl implements CartService {
     @Override
     @Transactional
     public void removeFromCart(Integer cartItemId) {
-        cartItemRepository.deleteById(cartItemId.longValue());
+        cartItemRepository.deleteById(cartItemId);
     }
 
     @Override

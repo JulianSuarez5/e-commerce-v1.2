@@ -14,6 +14,7 @@ public interface SellerMapper {
 
     @Mapping(target = "userId", source = "user.id")
     @Mapping(target = "username", source = "user.username")
+    @Mapping(target = "productCount", ignore = true)
     SellerDto toDto(Seller seller);
 
     List<SellerDto> toDtoList(List<Seller> sellers);
@@ -21,7 +22,7 @@ public interface SellerMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "user", ignore = true)
     @Mapping(target = "products", ignore = true)
-    @Mapping(target = "logo", ignore = true)
+    @Mapping(target = "logoUrl", ignore = true)
     @Mapping(target = "rating", ignore = true)
     @Mapping(target = "verified", ignore = true)
     @Mapping(target = "active", ignore = true)

@@ -36,9 +36,8 @@ public class DashboardServiceImpl implements DashboardService {
         long totalUsers = userRepository.count();
         long pendingOrders = orderRepository.countByStatus(OrderStatus.PENDING);
         BigDecimal totalSales = orderRepository.findTotalSales().orElse(BigDecimal.ZERO);
-        List<ProductDto> topSellingProducts = productRepository.findTop5ByOrderBySalesDesc().stream()
-                .map(productMapper::toDto)
-                .collect(Collectors.toList());
+        // FIXME: productRepository.findTop5ByOrderBySalesDesc() does not exist. Logic to get top selling products needs to be implemented.
+        List<ProductDto> topSellingProducts = Collections.emptyList();
 
         return new DashboardMetricsDto(totalUsers, pendingOrders, totalSales, topSellingProducts);
     }

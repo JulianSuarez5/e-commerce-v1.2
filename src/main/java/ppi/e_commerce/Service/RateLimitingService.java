@@ -3,10 +3,9 @@ package ppi.e_commerce.Service;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.github.vladimirbukhtoyarov.bucket4j.Bandwidth;
-import com.github.vladimirbukhtoyarov.bucket4j.Bucket;
-import com.github.vladimirbukhtoyarov.bucket4j.Bucket4j;
-import com.github.vladimirbukhtoyarov.bucket4j.Refill;
+import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.Bucket;
+import io.github.bucket4j.Refill;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -36,9 +35,10 @@ public class RateLimitingService {
     }
 
     private Bucket createNewBucket() {
-        Refill refill = Refill.intervally(refillRate, Duration.ofMinutes(1));
-        Bandwidth limit = Bandwidth.classic(capacity, refill);
-        return Bucket4j.builder().addLimit(limit).build();
+        Bandwidth limit = Bandwidth.classic(capacity, Refill.greedy(refillRate, Duration.ofMinutes(1)));
+        return Bucket.builder()
+                .addLimit(limit)
+                .build();
     }
 
     public Bucket resolveBucket(String ipAddress) {

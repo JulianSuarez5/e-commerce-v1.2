@@ -182,13 +182,13 @@ public class SecurityConfig {
             }
             rawRole = rawRole.trim().toUpperCase();
             if (rawRole.startsWith("ROLE_")) {
-                rawRole = raw.substring(5);
+                rawRole = rawRole.substring(5);
             }
             String finalRole = rawRole;
             log.debug("Asignando rol '{}' al usuario '{}'", finalRole, appUser.getUsername());
 
             String passwordToUse;
-            if (authService.estaUsandoContrasenaTemporal(appUser)) {
+            if (appUser.getTempPasswordHash() != null && !appUser.getTempPasswordHash().isBlank()) {
                 log.debug("Usando contraseña temporal para el usuario '{}'", appUser.getUsername());
                 passwordToUse = appUser.getTempPasswordHash();
             } else {

@@ -43,9 +43,8 @@ public abstract class ProductMapper {
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "brand", ignore = true)
     @Mapping(target = "seller", ignore = true)
-    @Mapping(target = "productMedia", ignore = true)
-    @Mapping(target = "reviews", ignore = true)
-    @Mapping(target = "averageRating", ignore = true)
+    @Mapping(target = "sku", ignore = true)
+    @Mapping(target = "stock", ignore = true)
     public abstract void updateEntityFromDto(ProductDto dto, @MappingTarget Product entity);
 
     @AfterMapping

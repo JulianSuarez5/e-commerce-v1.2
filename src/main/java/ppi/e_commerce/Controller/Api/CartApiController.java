@@ -44,7 +44,7 @@ public class CartApiController {
     @PostMapping("/items")
     public ResponseEntity<CartDto> addItem(@Valid @RequestBody AddCartItemRequest request, Authentication authentication) {
         String username = getUsername(authentication);
-        CartDto updatedCart = cartService.addItemToCart(username, request.getProductId(), request.getQuantity());
+        CartDto updatedCart = cartService.addItemToCart(username, request.getProductId().intValue(), request.getQuantity());
         return ResponseEntity.ok(updatedCart);
     }
 
