@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "product_models_3d")
 public class ProductModel3D {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -29,34 +30,85 @@ public class ProductModel3D {
         createdAt = LocalDateTime.now();
     }
 
-    public ProductModel3D() {}
+    public ProductModel3D() {
+    }
+
+    // Convenience constructor used by services when saving 3D models
+    public ProductModel3D(Product product, String url) {
+        this.product = product;
+        this.url = url;
+    }
 
     // Getters and Setters
-    public Integer getId() { return id; }
-    public void setId(Integer id) { this.id = id; }
+    public Integer getId() {
+        return id;
+    }
 
-    public Product getProduct() { return product; }
-    public void setProduct(Product product) { this.product = product; }
+    public void setId(Integer id) {
+        this.id = id;
+    }
 
-    public String getUrl() { return url; }
-    public void setUrl(String url) { this.url = url; }
+    public Product getProduct() {
+        return product;
+    }
 
-    public String getFormat() { return format; }
-    public void setFormat(String format) { this.format = format; }
+    public void setProduct(Product product) {
+        this.product = product;
+    }
 
-    public Long getFileSize() { return fileSize; }
-    public void setFileSize(Long fileSize) { this.fileSize = fileSize; }
+    public String getUrl() {
+        return url;
+    }
 
-    public String getThumbnailUrl() { return thumbnailUrl; }
-    public void setThumbnailUrl(String thumbnailUrl) { this.thumbnailUrl = thumbnailUrl; }
+    public void setUrl(String url) {
+        this.url = url;
+    }
 
-    public Boolean getOptimized() { return optimized; }
-    public void setOptimized(Boolean optimized) { this.optimized = optimized; }
+    public String getFormat() {
+        return format;
+    }
 
-    public Boolean getIsPrimary() { return isPrimary; }
-    public void setIsPrimary(Boolean isPrimary) { this.isPrimary = isPrimary; }
+    public void setFormat(String format) {
+        this.format = format;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public Long getFileSize() {
+        return fileSize;
+    }
+
+    public void setFileSize(Long fileSize) {
+        this.fileSize = fileSize;
+    }
+
+    public String getThumbnailUrl() {
+        return thumbnailUrl;
+    }
+
+    public void setThumbnailUrl(String thumbnailUrl) {
+        this.thumbnailUrl = thumbnailUrl;
+    }
+
+    public Boolean getOptimized() {
+        return optimized;
+    }
+
+    public void setOptimized(Boolean optimized) {
+        this.optimized = optimized;
+    }
+
+    public Boolean getIsPrimary() {
+        return isPrimary;
+    }
+
+    public void setIsPrimary(Boolean isPrimary) {
+        this.isPrimary = isPrimary;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
 }
-

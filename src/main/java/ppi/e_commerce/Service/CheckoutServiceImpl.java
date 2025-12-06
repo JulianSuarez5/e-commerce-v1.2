@@ -53,7 +53,6 @@ public class CheckoutServiceImpl implements CheckoutService {
         cartService.clearCart(user);
 
         // The payment simulation part is omitted as it was not fully implemented
-
         return orderMapper.toDto(savedOrder);
     }
 
@@ -97,7 +96,7 @@ public class CheckoutServiceImpl implements CheckoutService {
             order.getOrderDetails().add(detail);
 
             // Decrease stock
-            product.setCantidad(product.getCantidad() - cartItem.getQuantity());
+            product.setStock(product.getStock() - cartItem.getQuantity());
             productRepository.save(product);
         }
     }
@@ -106,7 +105,7 @@ public class CheckoutServiceImpl implements CheckoutService {
         if (!product.isActive()) {
             throw new BusinessException("Product " + product.getName() + " is not available.");
         }
-        if (product.getCantidad() < quantity) {
+        if (product.getStock() < quantity) {
             throw new BusinessException("Insufficient stock for product " + product.getName() + ".");
         }
     }

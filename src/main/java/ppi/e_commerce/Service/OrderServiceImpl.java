@@ -14,7 +14,6 @@ import ppi.e_commerce.Model.*;
 import ppi.e_commerce.Repository.OrderRepository;
 import ppi.e_commerce.Repository.OrderTrackingRepository;
 import ppi.e_commerce.Repository.UserRepository;
-import ppi.e_commerce.Model.UserRole;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -69,7 +68,7 @@ public class OrderServiceImpl implements OrderService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
 
-        if (user.getRole() != UserRole.ADMIN) {
+        if (!"ADMIN".equals(user.getRole())) {
             throw new AccessDeniedException("Only admins can update order status.");
         }
 

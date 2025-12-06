@@ -40,12 +40,12 @@ public class DataInitializationService implements CommandLineRunner {
             Category clothing = new Category("Ropa");
             Category home = new Category("Hogar");
             Category sports = new Category("Deportes");
-            
+
             categoryRepository.save(electronics);
             categoryRepository.save(clothing);
             categoryRepository.save(home);
             categoryRepository.save(sports);
-            
+
             System.out.println("✅ Categorías de ejemplo creadas");
         }
 
@@ -55,12 +55,12 @@ public class DataInitializationService implements CommandLineRunner {
             Brand apple = new Brand("Apple");
             Brand nike = new Brand("Nike");
             Brand adidas = new Brand("Adidas");
-            
+
             brandRepository.save(samsung);
             brandRepository.save(apple);
             brandRepository.save(nike);
             brandRepository.save(adidas);
-            
+
             System.out.println("✅ Marcas de ejemplo creadas");
         }
 
@@ -68,40 +68,42 @@ public class DataInitializationService implements CommandLineRunner {
         if (productRepository.count() == 0) {
             var categories = categoryRepository.findAll();
             var brands = brandRepository.findAll();
-            
+
             if (!categories.isEmpty() && !brands.isEmpty()) {
                 Category electronics = categories.get(0);
                 Brand samsung = brands.get(0);
                 Brand apple = brands.size() > 1 ? brands.get(1) : samsung;
-                
-                // Usar el constructor correcto: (name, description, price, cantidad, imageUrl, category, brand)
+
+                // Use the Product constructor: (name, description, price, stock, sku, imageUrl, category, brand)
                 Product product1 = new Product(
-                    "Smartphone Galaxy S24", 
-                    "El último smartphone de Samsung con IA", 
-                    2000000.0, 
-                    10, 
-                    "https://via.placeholder.com/300x200/3498db/ffffff?text=Galaxy+S24",
-                    electronics, 
-                    samsung
+                        "Smartphone Galaxy S24",
+                        "El último smartphone de Samsung con IA",
+                        2000000.0,
+                        10,
+                        "GAL-S24",
+                        "https://via.placeholder.com/300x200/3498db/ffffff?text=Galaxy+S24",
+                        electronics,
+                        samsung
                 );
-                
+
                 Product product2 = new Product(
-                    "iPhone 15 Pro", 
-                    "El iPhone más avanzado con chip A17 Pro", 
-                    4500000.0, 
-                    5, 
-                    "https://via.placeholder.com/300x200/e74c3c/ffffff?text=iPhone+15",
-                    electronics, 
-                    apple
+                        "iPhone 15 Pro",
+                        "El iPhone más avanzado con chip A17 Pro",
+                        4500000.0,
+                        5,
+                        "IP15-PRO",
+                        "https://via.placeholder.com/300x200/e74c3c/ffffff?text=iPhone+15",
+                        electronics,
+                        apple
                 );
-                
+
                 productRepository.save(product1);
                 productRepository.save(product2);
-                
+
                 System.out.println("✅ Productos de ejemplo creados");
             }
         }
-        
+
         System.out.println("✅ Inicialización de datos completada");
     }
 }
