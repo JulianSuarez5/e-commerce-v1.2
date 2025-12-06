@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
-import { AppleHeader } from '@/components/AppleHeader';
+// import { AppleHeader } from '@/components/AppleHeader';
 import { Providers } from '@/components/Providers';
 import { cn } from '@/lib/cn';
 import './globals.css';
@@ -41,7 +41,7 @@ export default function RootLayout({
         )}
       >
         <Providers>
-          <AppleHeader />
+          {/* <AppleHeader /> */}
           {children}
         </Providers>
       </body>

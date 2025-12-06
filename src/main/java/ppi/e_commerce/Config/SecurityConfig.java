@@ -1,34 +1,31 @@
 package ppi.e_commerce.Config;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import ppi.e_commerce.Repository.UserRepository;
-import ppi.e_commerce.Service.AuthServiceImpl;
 
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Arrays;
 import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
 
 @Slf4j
 @Configuration
@@ -40,19 +37,13 @@ public class SecurityConfig {
     private UserRepository userRepository;
 
     @Autowired
-    private AuthServiceImpl authService;
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Autowired
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
+    private PasswordEncoder passwordEncoder; // Inyectado desde AppConfig
 
     @Value("${app.cors.allowed-origins}")
     private String[] allowedOrigins;
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        log.info("Creando bean de BCryptPasswordEncoder.");
-        return new BCryptPasswordEncoder();
-    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -148,13 +139,13 @@ public class SecurityConfig {
     public DaoAuthenticationProvider authenticationProvider() {
         log.info("Creando DaoAuthenticationProvider.");
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setPasswordEncoder(passwordEncoder());
-        authProvider.setUserDetailsService(userDetailsService(userRepository, authService));
+        authProvider.setPasswordEncoder(passwordEncoder);
+        authProvider.setUserDetailsService(userDetailsService());
         return authProvider;
     }
 
     @Bean
-    public UserDetailsService userDetailsService(UserRepository userRepository, AuthServiceImpl authService) {
+    public UserDetailsService userDetailsService() {
         return username -> {
             log.debug("Buscando usuario por username o email: '{}'", username);
             java.util.Optional<ppi.e_commerce.Model.User> maybeUser = userRepository.findByUsername(username);

@@ -1,20 +1,71 @@
 'use client';
 
-import { useState } from 'react';
+import * as React from 'react';
+import { useState, useEffect, createContext, useContext } from 'react';
+import type { ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 
+// 1. Definir la forma del contexto
+interface AuthContextType {
+  user: any; // Se puede definir un tipo más estricto para User
+  loading: boolean;
+  login: (credentials: any) => Promise<void>;
+  register: (userData: any) => Promise<void>;
+  logout: () => void;
+}
+
+// 2. Crear el Contexto de React
+const AuthContext = createContext<AuthContextType | null>(null);
+
+// 3. Crear el componente Proveedor (Provider)
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const auth = useProvideAuth();
+  return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
+};
+
+// 4. Crear el Hook para usar el contexto fácilmente
 export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth debe ser usado dentro de un AuthProvider');
+  }
+  return context;
+};
+
+// --- Lógica de Autenticación --- 
+// Esta función interna maneja toda la lógica y el estado.
+const useProvideAuth = () => {
   const router = useRouter();
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const login = async (credentials) => {
+  // Efecto para verificar el usuario al cargar la página
+  useEffect(() => {
+    const initializeAuth = async () => {
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        // No es necesario establecer la cabecera aquí, el interceptor de Axios lo hará
+        try {
+          // Asumimos que hay un endpoint para obtener el usuario actual
+          const { data: userData } = await api.get('/users/me');
+          setUser(userData);
+        } catch (error) {
+          console.error('Token inválido, cerrando sesión:', error);
+          localStorage.removeItem('accessToken');
+        }
+      }
+      setLoading(false);
+    };
+    initializeAuth();
+  }, []);
+
+  const login = async (credentials: any) => {
     setLoading(true);
     try {
       const { data } = await api.post('/auth/login', credentials);
       localStorage.setItem('accessToken', data.token);
-      api.defaults.headers.Authorization = `Bearer ${data.token}`;
+      // El interceptor de Axios se encargará de añadir el token a las futuras peticiones
       const { data: userData } = await api.get('/users/me');
       setUser(userData);
       router.push('/');
@@ -26,7 +77,7 @@ export const useAuth = () => {
     }
   };
 
-  const register = async (userData) => {
+  const register = async (userData: any) => {
     setLoading(true);
     try {
       await api.post('/auth/register', userData);
@@ -40,7 +91,6 @@ export const useAuth = () => {
 
   const logout = () => {
     localStorage.removeItem('accessToken');
-    delete api.defaults.headers.Authorization;
     setUser(null);
     router.push('/login');
   };
