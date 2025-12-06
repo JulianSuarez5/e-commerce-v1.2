@@ -22,14 +22,15 @@ public class ProductMediaApiController {
 
     @PostMapping("/upload-image")
     public ResponseEntity<?> uploadImage(@PathVariable Integer productId, @RequestParam("file") MultipartFile file,
-                                         @AuthenticationPrincipal User user) {
+            @AuthenticationPrincipal User user) {
         try {
             // Validar que el usuario es el vendedor del producto
             if (!productService.isOwner(productId, user.getUsername())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You are not the owner of this product.");
             }
 
-            String fileName = fileStorageService.storeFile(file);
+            // Store image under a folder per product to keep files organized
+            String fileName = fileStorageService.storeImage(file, String.valueOf(productId));
             productService.saveProductImage(productId, fileName);
 
             return ResponseEntity.ok().build();
@@ -40,14 +41,15 @@ public class ProductMediaApiController {
 
     @PostMapping("/upload-model3d")
     public ResponseEntity<?> uploadModel3D(@PathVariable Integer productId, @RequestParam("file") MultipartFile file,
-                                           @AuthenticationPrincipal User user) {
+            @AuthenticationPrincipal User user) {
         try {
             // Validar que el usuario es el vendedor del producto
             if (!productService.isOwner(productId, user.getUsername())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You are not the owner of this product.");
             }
 
-            String fileName = fileStorageService.storeFile(file);
+            // Store 3D model under a folder per product
+            String fileName = fileStorageService.storeModel3D(file, String.valueOf(productId));
             productService.saveProductModel3D(productId, fileName);
 
             return ResponseEntity.ok().build();

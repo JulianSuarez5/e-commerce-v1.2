@@ -149,7 +149,7 @@ public class ProductServiceImpl implements ProductService {
         ProductVariant variant = productVariantRepository.findById(variantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product variant not found with ID: " + variantId));
         if (!variant.getProduct().getId().equals(productId)) {
-            throw new IllegalArgumentException("Product variant does not belong to the specified product
+            throw new IllegalArgumentException("Product variant does not belong to the specified product");
         }
         productVariantMapper.updateEntityFromDto(variantDto, variant);
         ProductVariant updatedVariant = productVariantRepository.save(variant);

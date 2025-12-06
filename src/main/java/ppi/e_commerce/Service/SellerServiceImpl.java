@@ -15,7 +15,6 @@ import ppi.e_commerce.Exception.SellerAlreadyExistsException;
 import ppi.e_commerce.Mapper.SellerMapper;
 import ppi.e_commerce.Model.Seller;
 import ppi.e_commerce.Model.User;
-import ppi.e_commerce.Model.UserRole;
 import ppi.e_commerce.Repository.SellerRepository;
 import ppi.e_commerce.Repository.UserRepository;
 
@@ -43,7 +42,7 @@ public class SellerServiceImpl implements SellerService {
             throw new SellerAlreadyExistsException("This user is already a seller.");
         }
 
-        user.setRole(UserRole.SELLER); // Assign SELLER role
+        user.setRole("SELLER"); // Assign SELLER role
         userRepository.save(user);
 
         Seller seller = new Seller();
@@ -64,7 +63,8 @@ public class SellerServiceImpl implements SellerService {
                 .orElseThrow(() -> new ResourceNotFoundException("Seller not found with ID: " + sellerId));
 
         if (!seller.getUser().getUsername().equals(username)) {
-             throw new SellerAccessDeniedException("User does not have permission to update this seller.");
+            log.warn("User {} attempted to update seller {} without permission", username, sellerId);
+            throw new SellerAccessDeniedException("User does not have permission to update this seller.");
         }
 
         sellerMapper.updateEntityFromRequest(request, seller);

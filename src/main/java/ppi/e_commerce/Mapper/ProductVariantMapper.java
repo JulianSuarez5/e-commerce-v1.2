@@ -2,6 +2,7 @@ package ppi.e_commerce.Mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 import ppi.e_commerce.Dto.ProductVariantDto;
 import ppi.e_commerce.Model.ProductVariant;
 
@@ -12,5 +13,5 @@ public interface ProductVariantMapper {
     ProductVariantDto toDto(ProductVariant variant);
 
     @Mapping(target = "product", ignore = true)
-    void updateEntityFromDto(ProductVariantDto dto, ProductVariant entity);
+    void updateEntityFromDto(ProductVariantDto dto, @MappingTarget ProductVariant entity);
 }
