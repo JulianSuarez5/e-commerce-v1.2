@@ -36,7 +36,7 @@ export default function RootLayout({
     <html lang="es" className={inter.variable}>
       <body
         className={cn(
-          "antialiased font-sans bg-white text-gray-800",
+          "antialiased font-sans",
           "min-h-screen"
         )}
       >
