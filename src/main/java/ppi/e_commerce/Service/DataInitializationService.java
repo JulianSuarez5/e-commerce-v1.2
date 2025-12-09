@@ -1,5 +1,7 @@
 package ppi.e_commerce.Service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Service;
@@ -8,6 +10,8 @@ import ppi.e_commerce.Repository.*;
 
 @Service
 public class DataInitializationService implements CommandLineRunner {
+
+    private static final Logger logger = LoggerFactory.getLogger(DataInitializationService.class);
 
     @Autowired
     private CategoryRepository categoryRepository;
@@ -28,11 +32,11 @@ public class DataInitializationService implements CommandLineRunner {
 
     private void initializeData() {
         if (!createSampleData) {
-            System.out.println("✅ Seed data deshabilitado. Todos los datos vienen de la base de datos.");
+            logger.info("✅ Seed data deshabilitado. Todos los datos vienen de la base de datos.");
             return; // No crear datos de ejemplo
         }
 
-        System.out.println("⚠️ Creando datos de ejemplo (app.seed.create-sample-data=true)...");
+        logger.info("⚠️ Creando datos de ejemplo (app.seed.create-sample-data=true)...");
 
         // Crear categorías de ejemplo si no existen
         if (categoryRepository.count() == 0) {
@@ -46,7 +50,7 @@ public class DataInitializationService implements CommandLineRunner {
             categoryRepository.save(home);
             categoryRepository.save(sports);
 
-            System.out.println("✅ Categorías de ejemplo creadas");
+            logger.info("✅ Categorías de ejemplo creadas");
         }
 
         // Crear marcas de ejemplo si no existen
@@ -61,7 +65,7 @@ public class DataInitializationService implements CommandLineRunner {
             brandRepository.save(nike);
             brandRepository.save(adidas);
 
-            System.out.println("✅ Marcas de ejemplo creadas");
+            logger.info("✅ Marcas de ejemplo creadas");
         }
 
         // Crear productos de ejemplo si no existen (CORREGIDO)
@@ -100,10 +104,10 @@ public class DataInitializationService implements CommandLineRunner {
                 productRepository.save(product1);
                 productRepository.save(product2);
 
-                System.out.println("✅ Productos de ejemplo creados");
+                logger.info("✅ Productos de ejemplo creados");
             }
         }
 
-        System.out.println("✅ Inicialización de datos completada");
+        logger.info("✅ Inicialización de datos completada");
     }
 }

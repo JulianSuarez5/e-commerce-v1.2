@@ -47,9 +47,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col items-center justify-center bg-gradient-to-br from-gray-100 via-white to-gray-50 overflow-hidden">
-      <div className="absolute inset-0 bg-[url(/grid.svg)] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]" />
-
+    <div className="relative flex min-h-screen w-full flex-col items-center justify-center bg-white overflow-hidden">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -57,26 +55,26 @@ export default function RegisterPage() {
         className="relative z-10 w-full max-w-md px-4 py-16"
       >
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold tracking-tight text-gray-900">Crea tu Cuenta</h1>
-          <p className="mt-2 text-gray-600">Únete a la nueva era del e-commerce premium.</p>
+          <h1 className="text-display text-[#1D1D1F] mb-2">Crea tu Cuenta</h1>
+          <p className="text-subtitle">Únete a la nueva era del e-commerce premium.</p>
         </div>
 
-        <div className="relative rounded-2xl border border-gray-200/80 bg-white/60 p-8 shadow-2xl backdrop-blur-lg">
+        <div className="relative rounded-[16px] border border-[#E5E5E7] bg-white p-8 shadow-sm">
           <form onSubmit={handleRegister} className="space-y-4">
             <div className="relative">
-              <User className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+              <User className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#86868B]" />
               <Input
                 type="text"
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
                 placeholder="Nombre completo"
-                className="pl-10"
+                className="pl-12"
                 required
               />
             </div>
             <div className="relative">
-               <Input
+              <Input
                 type="text"
                 name="username"
                 value={formData.username}
@@ -86,49 +84,49 @@ export default function RegisterPage() {
               />
             </div>
             <div className="relative">
-              <Mail className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+              <Mail className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#86868B]" />
               <Input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="tu@email.com"
-                className="pl-10"
+                className="pl-12"
                 required
               />
             </div>
             <div className="relative">
-              <Phone className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+              <Phone className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#86868B]" />
               <Input
                 type="tel"
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
                 placeholder="Teléfono (Opcional)"
-                className="pl-10"
+                className="pl-12"
               />
             </div>
             <div className="relative">
-              <Lock className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+              <Lock className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#86868B]" />
               <Input
                 type="password"
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
                 placeholder="Contraseña"
-                className="pl-10"
+                className="pl-12"
                 required
               />
             </div>
             <div className="relative">
-              <Lock className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+              <Lock className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#86868B]" />
               <Input
                 type="password"
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 placeholder="Confirmar contraseña"
-                className="pl-10"
+                className="pl-12"
                 required
               />
             </div>
@@ -138,10 +136,10 @@ export default function RegisterPage() {
             </Button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-gray-600">
+          <div className="mt-6 text-center text-sm text-[#86868B]">
             <p>
               ¿Ya tienes una cuenta? {' '}
-              <Link href="/login" className="font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+              <Link href="/login" className="font-medium text-[#007AFF] hover:text-[#0A84FF] transition-colors">
                 Inicia sesión
               </Link>
             </p>

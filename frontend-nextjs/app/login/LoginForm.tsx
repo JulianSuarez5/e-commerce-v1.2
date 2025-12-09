@@ -30,9 +30,7 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col items-center justify-center bg-gradient-to-br from-gray-100 via-white to-gray-50 overflow-hidden">
-      <div className="absolute inset-0 bg-[url(/grid.svg)] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]" />
-
+    <div className="relative flex min-h-screen w-full flex-col items-center justify-center bg-white overflow-hidden">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -40,8 +38,8 @@ export default function LoginForm() {
         className="relative z-10 w-full max-w-md px-4 py-16"
       >
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold tracking-tight text-gray-900">Accede a tu Cuenta</h1>
-          <p className="mt-2 text-gray-600">Bienvenido de nuevo a la vanguardia del e-commerce.</p>
+          <h1 className="text-display text-[#1D1D1F] mb-2">Accede a tu Cuenta</h1>
+          <p className="text-subtitle">Bienvenido de nuevo a la vanguardia del e-commerce.</p>
         </div>
 
         <AuthForm 
@@ -50,10 +48,10 @@ export default function LoginForm() {
           submitText='Iniciar Sesión' 
         />
 
-        <div className="mt-6 text-center text-sm text-gray-600">
+        <div className="mt-6 text-center text-sm text-[#86868B]">
           <p>
             ¿Aún no tienes cuenta? {' '}
-            <Link href="/register" className="font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+            <Link href="/register" className="font-medium text-[#007AFF] hover:text-[#0A84FF] transition-colors">
               Regístrate aquí
             </Link>
           </p>

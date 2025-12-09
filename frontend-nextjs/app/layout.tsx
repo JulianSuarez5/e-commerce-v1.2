@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
-// import { AppleHeader } from '@/components/AppleHeader';
+import { AppleHeader } from '@/components/AppleHeader';
 import { Providers } from '@/components/Providers';
 import { cn } from '@/lib/cn';
 import './globals.css';
@@ -37,11 +37,11 @@ export default function RootLayout({
       <body
         className={cn(
           "antialiased font-sans",
-          "min-h-screen"
+          "min-h-screen bg-white"
         )}
       >
         <Providers>
-          {/* <AppleHeader /> */}
+          <AppleHeader />
           {children}
         </Providers>
       </body>

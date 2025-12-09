@@ -25,29 +25,29 @@ export function AuthForm({ onSubmit, loading, submitText }: AuthFormProps) {
   };
 
   return (
-    <div className="relative rounded-2xl border border-gray-200/80 bg-white/60 p-8 shadow-2xl backdrop-blur-lg">
+    <div className="relative rounded-[16px] border border-[#E5E5E7] bg-white p-8 shadow-sm">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="relative">
-          <Mail className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+          <Mail className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#86868B]" />
           <Input
             type="email"
             name="email"
             value={credentials.email}
             onChange={handleChange}
             placeholder="tu@email.com"
-            className="pl-10"
+            className="pl-12"
             required
           />
         </div>
         <div className="relative">
-          <Lock className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+          <Lock className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#86868B]" />
           <Input
             type="password"
             name="password"
             value={credentials.password}
             onChange={handleChange}
             placeholder="Contraseña"
-            className="pl-10"
+            className="pl-12"
             required
           />
         </div>

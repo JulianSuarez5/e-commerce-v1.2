@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ShoppingCart, Heart, Share2 } from 'lucide-react';
@@ -10,12 +10,17 @@ import Product3DViewer from '@/components/Product3DViewer';
 import { ProductDto } from '@/types/product';
 import { Container } from '@/ui/container';
 import { Button } from '@/ui/button';
+import { useAuth } from '@/hooks/useAuth';
+import toast from 'react-hot-toast';
 
 export default function ProductDetailPage() {
   const params = useParams();
+  const router = useRouter();
+  const { user } = useAuth();
   const [product, setProduct] = useState<ProductDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [addingToCart, setAddingToCart] = useState(false);
 
   useEffect(() => {
     if (params.id) {
@@ -66,6 +71,43 @@ export default function ProductDetailPage() {
       </div>
     );
   }
+
+  const handleAddToCart = async () => {
+    if (!user) {
+      toast.error('Debes iniciar sesión para agregar productos al carrito');
+      router.push('/login');
+      return;
+    }
+
+    if (!product) return;
+
+    setAddingToCart(true);
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch('/api/cart/items', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          productId: product.id,
+          quantity: 1,
+        }),
+      });
+
+      if (response.ok) {
+        toast.success('Producto agregado al carrito');
+      } else {
+        const error = await response.json();
+        toast.error(error.message || 'Error al agregar al carrito');
+      }
+    } catch (error) {
+      toast.error('Error al agregar al carrito');
+    } finally {
+      setAddingToCart(false);
+    }
+  };
 
   const images = product.images || [];
   const primaryImage = images.find(img => img.isPrimary) || images[0] || { url: product.imageUrl };
@@ -190,9 +232,14 @@ export default function ProductDetailPage() {
 
             {/* Actions */}
             <div className="space-y-3 pt-6">
-              <Button fullWidth className="flex items-center justify-center space-x-2">
+              <Button 
+                fullWidth 
+                onClick={handleAddToCart}
+                disabled={addingToCart || product.cantidad === 0}
+                className="flex items-center justify-center space-x-2"
+              >
                 <ShoppingCart className="w-5 h-5" />
-                <span>Agregar al carrito</span>
+                <span>{addingToCart ? 'Agregando...' : product.cantidad === 0 ? 'Sin stock' : 'Agregar al carrito'}</span>
               </Button>
               
               <div className="flex space-x-3">
