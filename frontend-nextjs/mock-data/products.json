@@ -1,0 +1,21 @@
+
+[
+  {
+    "id": "1",
+    "name": "Laptop Pro",
+    "price": 1200,
+    "description": "Una laptop potente para profesionales."
+  },
+  {
+    "id": "2",
+    "name": "Smartphone X",
+    "price": 800,
+    "description": "El último smartphone con una cámara increíble."
+  },
+  {
+    "id": "3",
+    "name": "Auriculares Inalámbricos",
+    "price": 150,
+    "description": "Calidad de sonido superior sin cables."
+  }
+]
